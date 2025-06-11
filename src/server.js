@@ -278,5 +278,5 @@ io.on('connection', (socket) => {
 // Inicia o servidor Express e Socket.io
 server.listen(PORT, () => {
   console.log(`Servidor backend rodando na porta ${PORT}`);
-  console.log(`Acesse: http://192.168.0.3:${PORT}`);
+  console.log(`Acesse: http://192.168.0.4:${PORT}`);
 });
