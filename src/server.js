@@ -1,6 +1,9 @@
 // server.js
 // Esta linha DEVE ser a primeira no arquivo.
-require('dotenv').config({ path: '../.env' }); // Ajuste o caminho se necessário
+require('dotenv').config({ path: './.env' }); // Ajuste o caminho se necessário
+
+console.log("JWT_SECRET carregado:", process.env.JWT_SECRET);
+
 
 const express = require('express');
 const http = require('http');
@@ -62,6 +65,25 @@ app.get('/users', authenticateToken, async (req, res) => {
     res.status(500).json({ error: 'Erro interno do servidor ao buscar usuários.' });
   }
 });
+
+app.delete('/delete-users/:id', authenticateToken, async (req, res) => {
+  const userId = req.params.id;
+
+  if (req.user.userId !== userId) {
+    return res.status(403).json({ message: 'Você não tem permissão para excluir este usuário.' });
+  }
+
+  try {
+    const deletedUser = await prisma.user.delete({
+      where: { id: userId }
+    });
+    res.json({ message: 'Usuário excluído com sucesso!', user: deletedUser });
+  } catch (error) {
+    console.error('Erro ao excluir usuário:', error);
+    res.status(500).json({ error: 'Erro interno do servidor ao excluir usuário.' });
+  }
+}
+);
 
 app.post('/register', async (req, res) => {
   const { email, username, password } = req.body;
@@ -129,7 +151,7 @@ app.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Credenciais inválidas.' });
     }
 
-    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '1y' });
 
     return res.status(200).json({
       message: 'Login realizado com sucesso!',
@@ -257,26 +279,14 @@ app.get('/rank', authenticateToken, async (req, res) => {
 });
 
 
-
+// 2. Inicializa o MATCHMAKING com `io` e as funções de lógica do jogo.
+//    Isto retorna a função `handleConnection` que usaremos para cada novo socket.
+const handleConnection = matchmaking(io, gameLogicFunctions);
 // --- Lógica do Socket.io ---
-io.on('connection', (socket) => {
-  console.log('Um usuário conectado via Socket.io:', socket.id);
-
-  // === IMPORTANTE: Configura os eventos de jogo para ESTE socket ===
-  gameLogicFunctions.setupSocketEvents(socket); // <--- ESTA LINHA CONFIGURA TODOS OS LISTENERS DE JOGO
-
-  // Inicializa os eventos de matchmaking para o socket
-  matchmaking(io, socket, gameLogicFunctions); // Passa gameLogicFunctions para o matchmaking
-  
-
-  socket.on('disconnect', () => {
-    console.log('Usuário desconectado via Socket.io:', socket.id);
-    // A lógica de desconexão para remover o jogador da partida já está no matchmaking.js
-  });
-});
+io.on('connection', handleConnection);
 
 // Inicia o servidor Express e Socket.io
 server.listen(PORT, () => {
   console.log(`Servidor backend rodando na porta ${PORT}`);
-  console.log(`Acesse: http://192.168.0.4:${PORT}`);
+  console.log(`Acesse: http://localhost:${PORT}`);
 });

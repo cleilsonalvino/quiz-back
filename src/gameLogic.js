@@ -1,11 +1,15 @@
 // src/gameLogic.js
+
 const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient(); // Garante que prisma está instanciado
+const prisma = new PrismaClient();
 
 const { htmlQuestions } = require('./data/htmlQuestions');
 const { javascriptQuestions } = require('./data/javascriptQuestions');
 const { pythonQuestions } = require('./data/pythonQuestions');
 const { cssQuestions } = require('./data/cssQuestions');
+
+const activeGames = new Map();
+let ioInstance;
 
 const shuffleArray = (array) => {
     const shuffledArray = [...array];
@@ -18,196 +22,170 @@ const shuffleArray = (array) => {
 
 const getQuestionsByCategory = (categoryName) => {
     switch (categoryName) {
-        case 'HTML':
-            return htmlQuestions;
-        case 'JavaScript':
-            return javascriptQuestions;
-        case 'Python':
-            return pythonQuestions;
-        case 'CSS':
-            return cssQuestions;
-        default:
-            console.warn(`Backend: Categoria '${categoryName}' não encontrada. Usando perguntas de HTML como padrão.`);
-            return htmlQuestions;
+        case 'HTML': return htmlQuestions;
+        case 'JavaScript': return javascriptQuestions;
+        case 'Python': return pythonQuestions;
+        case 'CSS': return cssQuestions;
+        default: return htmlQuestions;
     }
 };
 
-const activeGames = new Map();
-
-let ioInstance; // Esta variável DEVE ser populada por initGameLogic
-
-const startTimer = (gameId) => {
+const startGame = (gameId) => {
     const game = activeGames.get(gameId);
-    if (!game) {
-        console.error(`Backend: Tentativa de iniciar timer para jogo inexistente: ${gameId}`);
+    if (!game) return;
+
+    const allQuestions = getQuestionsByCategory(game.config.category);
+    game.questions = shuffleArray(allQuestions).slice(0, game.config.numQuestions);
+    
+    if (game.questions.length === 0) {
+        ioInstance.to(gameId).emit('error', { message: 'Nenhuma pergunta encontrada para esta categoria.' });
+        activeGames.delete(gameId);
         return;
     }
-    console.log(`Backend: startTimer chamado para GameId: ${gameId}`);
-    console.log(`Backend: Game config: ${JSON.stringify(game.config)}`);
 
-    const selectedGameQuestions = shuffleArray(getQuestionsByCategory(game.config.category))
-                                  .slice(0, game.config.numQuestions);
-    game.questions = selectedGameQuestions;
-    console.log(`Backend: Perguntas para ${game.config.category}: ${game.questions.length}`);
+    console.log(`Backend: Jogo ${gameId} iniciado com ${game.questions.length} perguntas.`);
+    
+    game.currentQuestionIndex = 0;
+    advanceToNextQuestion(gameId);
+};
 
-    const clientsInRoom = ioInstance.sockets.adapter.rooms.get(gameId);
-    console.log(`Backend: Sockets na sala ${gameId} antes de emitir nextQuestion:`, clientsInRoom ? Array.from(clientsInRoom) : 'Sala vazia ou não existe');
+const advanceToNextQuestion = (gameId) => {
+    const game = activeGames.get(gameId);
+    if (!game || game.isFinished) return;
 
-
-    let timeLeft = game.config.quizTime;
-    ioInstance.to(gameId).emit('timerUpdate', timeLeft);
-    console.log(`Backend: Emitindo 'timerUpdate' (${timeLeft}s) para GameId: ${gameId}`);
-
-    if (game.questions.length > 0) {
-        console.log(`Backend: Enviando primeira pergunta para GameId ${gameId}, Pergunta Index 0. Question ID: ${game.questions[0].id}`);
-        ioInstance.to(gameId).emit('nextQuestion', {
-            question: game.questions[0],
-            questionIndex: 0,
-            player1Id: game.player1.id,
-            player2Id: game.player2.id,
-            player1Username: game.player1.username,
-            player2Username: game.player2.username,
-            initialTime: game.config.quizTime,
-        });
-    } else {
-        console.warn(`Backend: Partida ${gameId} iniciada sem perguntas. Finalizando.`);
+    if (game.questionTimer) {
+        clearInterval(game.questionTimer);
+    }
+    
+    // --- NOVO LOG DE DEBUG AQUI ---
+    if (game.currentQuestionIndex >= game.questions.length) {
+        console.log(`--> CONDIÇÃO DE FIM DE JOGO ATINGIDA (pergunta ${game.currentQuestionIndex}/${game.questions.length}). CHAMANDO endGame...`);
         endGame(gameId);
         return;
     }
 
-    game.timer = setInterval(() => {
+    const questionIndex = game.currentQuestionIndex;
+    const question = game.questions[questionIndex];
+
+    if(game.player1) game.player1.hasAnswered = false;
+    if (game.player2) game.player2.hasAnswered = false;
+    
+    console.log(`Backend: Enviando pergunta ${questionIndex + 1}/${game.questions.length} para o jogo ${gameId}.`);
+    
+    ioInstance.to(gameId).emit('nextQuestion', {
+        question,
+        questionIndex,
+        totalQuestions: game.questions.length
+    });
+
+    let timeLeft = game.config.quizTime;
+    ioInstance.to(gameId).emit('timerUpdate', timeLeft);
+
+    game.questionTimer = setInterval(() => {
         timeLeft--;
         ioInstance.to(gameId).emit('timerUpdate', timeLeft);
 
         if (timeLeft <= 0) {
-            clearInterval(game.timer);
-            endGame(gameId);
+            clearInterval(game.questionTimer);
+            console.log(`Backend: Tempo da pergunta ${questionIndex} esgotado.`);
+            game.currentQuestionIndex++;
+            advanceToNextQuestion(gameId);
         }
     }, 1000);
 };
 
 const endGame = async (gameId) => {
+    // --- NOVO LOG DE DEBUG AQUI ---
+    console.log(`--> FUNÇÃO endGame INICIADA para o jogo ${gameId}`);
     const game = activeGames.get(gameId);
-    if (!game) return;
+    if (!game || game.isFinished) {
+        if(game) console.log(`Backend: Tentativa de finalizar jogo ${gameId} que já terminou.`);
+        return;
+    }
 
-    if (game.timer) clearInterval(game.timer);
+    game.isFinished = true;
+    if (game.questionTimer) clearInterval(game.questionTimer); 
+    
+    console.log(`Backend: Finalizando jogo ${gameId}. Pontuações: P1=${game.player1.score}, P2=${game.player2 ? game.player2.score : 'N/A'}`);
 
-    console.log(`Backend: Finalizando jogo ${gameId}. Pontuações: P1=${game.player1.score}, P2=${game.player2.score}`);
-
-    // === NOVO: ATUALIZAR PONTUAÇÃO NO BANCO DE DADOS ===
     try {
-        // Atualiza a pontuação do Player 1
-        await prisma.user.update({
-            where: { id: game.player1.id },
-            data: { score: { increment: game.player1.score } } // Adiciona a pontuação do jogo à pontuação total
-        });
-        console.log(`Backend: Pontuação de ${game.player1.username} (${game.player1.id}) atualizada com ${game.player1.score} pontos.`);
-
-        // Atualiza a pontuação do Player 2 (se não for um BOT)
-        if(game.player2 && game.player2.id !== 'BOT') { // Adicionado verificação para game.player2
+        if (game.player1) {
+            await prisma.user.update({
+                where: { id: game.player1.id },
+                data: { score: { increment: game.player1.score } }
+            });
+        }
+        if (game.player2 && game.player2.id !== 'BOT') {
             await prisma.user.update({
                 where: { id: game.player2.id },
                 data: { score: { increment: game.player2.score } }
             });
-            console.log(`Backend: Pontuação de ${game.player2.username} (${game.player2.id}) atualizada com ${game.player2.score} pontos.`);
-        } else if (game.player2 && game.player2.id === 'BOT') {
-            console.log(`Backend: Oponente é BOT, pontuação não será salva no DB.`);
-        } else {
-            console.log(`Backend: Jogo de 1 jogador (ou oponente não definido), apenas P1 pontuação atualizada.`);
         }
-
     } catch (error) {
-        console.error(`Backend: ERRO ao atualizar pontuação no DB para o jogo ${gameId}:`, error);
+        console.error(`Backend: Erro ao salvar pontuações para o jogo ${gameId}:`, error);
     }
-    // === FIM NOVO ===
 
+    const winnerId = (game.player1 && game.player2) ? 
+                     (game.player1.score > game.player2.score ? game.player1.id :
+                     (game.player2.score > game.player1.score ? game.player2.id : null)) :
+                     (game.player1 ? game.player1.id : null);
+
+    // --- NOVO LOG DE DEBUG AQUI ---
+    console.log(`--> EMITINDO 'gameOver' para a sala ${gameId}`);
     ioInstance.to(gameId).emit('gameOver', {
-        player1Score: game.player1.score,
-        player2Score: game.player2.score,
+        player1Score: game.player1 ? game.player1.score : 0,
+        player2Score: game.player2 ? game.player2.score : 0,
         totalQuestions: game.questions.length,
-        category: game.config.selectedCategory,
-        winnerId: game.player1.score > game.player2.score ? game.player1.id :
-                  (game.player2.score > game.player1.score ? game.player2.id : null)
+        category: game.config.category,
+        numQuestions: game.config.numQuestions,
+        quizTime: game.config.quizTime,
+        winnerId: winnerId,
     });
 
     activeGames.delete(gameId);
     console.log(`Backend: Partida ${gameId} finalizada e removida.`);
 };
 
-const processAnswer = (socket) => {
+const setupSocketEvents = (socket) => {
     socket.on('submitAnswer', ({ gameId, userId, questionIndex, selectedOption }) => {
         const game = activeGames.get(gameId);
-        if (!game || game.currentQuestionIndex !== questionIndex) {
-            console.log(`Backend: Resposta inválida para jogo ${gameId} de ${userId}. Índice ${questionIndex} vs ${game ? game.currentQuestionIndex : 'N/A'}`);
-            return;
-        }
-        console.log(`Backend: Resposta recebida para jogo ${gameId}, usuário ${userId}, pergunta ${questionIndex}`);
+        
+        if (!game || game.currentQuestionIndex !== questionIndex || game.isFinished) return;
 
-        const playerKey = game.player1.id === userId ? 'player1' : (game.player2 && game.player2.id === userId ? 'player2' : null); // Adiciona verificação para game.player2
-        if (!playerKey) {
-            console.log(`Backend: Usuário ${userId} não pertence a esta partida.`);
-            return;
-        }
-
+        const playerKey = game.player1.id === userId ? 'player1' : (game.player2 && game.player2.id === userId ? 'player2' : null);
+        if (!playerKey || game[playerKey].hasAnswered) return;
+        
+        game[playerKey].hasAnswered = true;
         const question = game.questions[questionIndex];
-        const isCorrect = (selectedOption === question.correctAnswer);
-
-        if (isCorrect) {
+        if (question.correctAnswer === selectedOption) {
             game[playerKey].score++;
         }
-
+        
         ioInstance.to(gameId).emit('scoreUpdate', {
             player1Score: game.player1.score,
-            player2Score: game.player2.score
+            player2Score: game.player2.score,
         });
 
-        setTimeout(() => {
+        if (game.player1.hasAnswered && game.player2?.hasAnswered) {
+            clearInterval(game.questionTimer);
             game.currentQuestionIndex++;
-            if (game.currentQuestionIndex < game.questions.length) {
-                console.log(`Backend: Avançando para próxima pergunta para GameId ${gameId}, Pergunta Index ${game.currentQuestionIndex}`);
-                ioInstance.to(gameId).emit('nextQuestion', {
-                    question: game.questions[game.currentQuestionIndex],
-                    questionIndex: game.currentQuestionIndex
-                });
-            } else {
-                console.log(`Backend: Todas as perguntas respondidas para GameId ${gameId}.`);
-                endGame(gameId);
-            }
-        }, 1500);
+            advanceToNextQuestion(gameId);
+        }
     });
 
-    socket.on('surrenderGame', ({ gameId, userId }) => {
-        const game = activeGames.get(gameId);
-        if (!game) {
-            console.log(`Backend: Jogo ${gameId} não encontrado para desistência de ${userId}.`);
-            return;
-        }
-
-        let surrenderedPlayerUsername = 'Desconhecido';
-        if (game.player1.id === userId) {
-            surrenderedPlayerUsername = game.player1.username;
-        } else if (game.player2 && game.player2.id === userId) {
-            surrenderedPlayerUsername = game.player2.username;
-        }
-
-        console.log(`Backend: Jogador ${surrenderedPlayerUsername} (${userId}) desistiu da partida ${gameId}.`);
-        ioInstance.to(gameId).emit('opponentDisconnected', { message: `${surrenderedPlayerUsername} desistiu da partida.` });
+    socket.on('surrenderGame', ({ gameId }) => {
         endGame(gameId);
     });
 };
 
-
 module.exports = {
     activeGames,
-    shuffleArray,
-    getQuestionsByCategory,
-    initGameLogic: (ioServer) => {
-        ioInstance = ioServer;
-        console.log('Backend: gameLogic inicializado com ioInstance.');
+    initGameLogic: (io) => {
+        ioInstance = io;
         return {
-            startTimer,
-            endGame,
-            setupSocketEvents: (socket) => processAnswer(socket)
+            setupSocketEvents: setupSocketEvents,
+            startGame: startGame,
+            endGame: endGame
         };
     }
 };
