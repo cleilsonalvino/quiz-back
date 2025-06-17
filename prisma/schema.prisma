@@ -16,4 +16,5 @@ model User {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   score     Int       @default(0) // Garanta que este campo existe
+  pushToken String?  @unique 
 }
