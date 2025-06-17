@@ -7,7 +7,8 @@ const { htmlQuestions } = require('./data/htmlQuestions');
 const { javascriptQuestions } = require('./data/javascriptQuestions');
 const { pythonQuestions } = require('./data/pythonQuestions');
 const { cssQuestions } = require('./data/cssQuestions');
-const { portuguesConcursos } = require('./data/portuguesConcursos.js');
+const { portuguesConcursos } = require('./data/portuguesConcursos');
+
 
 const activeGames = new Map();
 let ioInstance;
@@ -27,7 +28,7 @@ const getQuestionsByCategory = (categoryName) => {
         case 'JavaScript': return javascriptQuestions;
         case 'Python': return pythonQuestions;
         case 'CSS': return cssQuestions;
-        case 'Portugues': return portuguesConcursos
+        case 'Português': return portuguesConcursos
         default: return htmlQuestions;
     }
 };
