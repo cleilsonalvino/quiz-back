@@ -2,6 +2,7 @@
 // Esta linha DEVE ser a primeira no arquivo.
 require('dotenv').config({ path: './.env' }); // Ajuste o caminho se necessário
 
+
 console.log("JWT_SECRET carregado:", process.env.JWT_SECRET);
 
 
@@ -9,13 +10,15 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const { PrismaClient } = require('@prisma/client');
-const bcrypt = require('bcryptjs'); // Lembre-se de importar bcryptjs
-const jwt = require('jsonwebtoken'); // Lembre-se de importar jsonwebtoken
-const axios = require('axios'); // <<-- Adicionado: Para fazer requisições HTTP para o FCM
+const bcrypt = require('bcryptjs'); 
+const jwt = require('jsonwebtoken'); 
+const admin = require('firebase-admin'); // <<< IMPORTANTE: Importe o firebase-admin SDK
+// REMOVEMOS AXIOS, ele não é mais necessário para enviar FCM com firebase-admin.
+// const axios = require('axios'); 
 
-const authenticateToken = require('./authMiddleware'); // Importa o middleware de autenticação
-const matchmaking = require('./matchmaking'); // Importa o módulo de matchmaking
-const { initGameLogic, activeGames } = require('./gameLogic'); // Importa initGameLogic e activeGames
+const authenticateToken = require('./authMiddleware'); 
+const matchmaking = require('./matchmaking'); 
+const { initGameLogic, activeGames } = require('./gameLogic'); 
 
 const prisma = new PrismaClient();
 
@@ -33,8 +36,22 @@ const io = new Server(server, {
 // gameLogicFunctions agora contém { startTimer, endGame, setupSocketEvents }
 const gameLogicFunctions = initGameLogic(io);
 
+// --- Configuração do Firebase Admin SDK ---
+// O caminho para o arquivo JSON da sua conta de serviço.
+// Certifique-se de que este caminho está CORRETO e o arquivo está SEGURO.
+// Renomeie 'firebase-service-account.json' para o nome do seu arquivo real.
+const serviceAccount = require('./firebase-service-account.json'); // <<< ATUALIZE O NOME DO ARQUIVO REAL AQUI!
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
+
+console.log("Firebase Admin SDK inicializado para notificações V1.");
+// --- Fim da Configuração do Firebase Admin SDK ---
+
+
 const PORT = process.env.PORT || 3000;
-const JWT_SECRET = process.env.JWT_SECRET; // JWT_SECRET será acessado via process.env no authenticateToken
+const JWT_SECRET = process.env.JWT_SECRET; 
 
 if (!JWT_SECRET) {
   console.error('ERRO: JWT_SECRET não está definido! Verifique seu arquivo .env e o caminho no dotenv.config().');
@@ -43,7 +60,7 @@ if (!JWT_SECRET) {
 
 app.use(express.json());
 
-// --- Rotas RESTful ---
+// --- Rotas RESTful --- 
 
 app.get('/', (req, res) => {
   res.send('Estudelab Quiz Backend está funcionando!');
@@ -70,9 +87,6 @@ app.get('/users', authenticateToken, async (req, res) => {
 app.delete('/delete-users/:id', authenticateToken, async (req, res) => {
   const userId = req.params.id;
 
-  // Garanta que apenas administradores ou o próprio usuário podem deletar
-  // Aqui, você pode adicionar a mesma lógica de `authorizeAdmin` se quiser que só o admin delete
-  // Ou permitir que o usuário delete a si mesmo:
   if (req.user.userId !== userId) {
     return res.status(403).json({ message: 'Você não tem permissão para excluir este usuário.' });
   }
@@ -90,42 +104,53 @@ app.delete('/delete-users/:id', authenticateToken, async (req, res) => {
 );
 
 app.post('/register', async (req, res) => {
-  const { email, username, password } = req.body;
+    const { email, username, password } = req.body;
 
-  if (!email || !username || !password) {
-    return res.status(400).json({ message: 'E-mail, nome de usuário e senha são obrigatórios.' });
-  }
-
-  try {
-    const existingUser = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { email: email },
-          { username: username }
-        ]
-      }
-    });
-
-    if (existingUser) {
-      return res.status(409).json({ message: 'E-mail ou nome de usuário já está em uso.' });
+    if (!email || !username || !password) {
+        return res.status(400).json({ message: 'E-mail, nome de usuário e senha são obrigatórios.' });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    try {
+        const existingUser = await prisma.user.findFirst({
+            where: {
+                OR: [
+                    { email: email },
+                    { username: username }
+                ]
+            }
+        });
 
-    const newUser = await prisma.user.create({
-      data: {
-        email,
-        username,
-        password: hashedPassword,
-      }
-    });
+        if (existingUser) {
+            return res.status(409).json({ message: 'E-mail ou nome de usuário já está em uso.' });
+        }
 
-    return res.status(201).json({ message: 'Usuário registrado com sucesso! Faça login para continuar.' });
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-  } catch (error) {
-    console.error('Erro no registro de usuário:', error);
-    res.status(500).json({ message: 'Erro interno do servidor ao registrar usuário.' });
-  }
+        const newUser = await prisma.user.create({
+            data: {
+                email,
+                username,
+                password: hashedPassword,
+                score: 0,        
+                pushToken: null, 
+            }
+        });
+
+        const token = jwt.sign({ userId: newUser.id }, process.env.JWT_SECRET, { expiresIn: '1y' });
+
+        return res.status(201).json({
+            message: 'Usuário registrado e logado com sucesso!',
+            token: token, 
+            userId: newUser.id,
+            username: newUser.username,
+            email: newUser.email,
+            score: newUser.score 
+        });
+
+    } catch (error) {
+        console.error('Erro no registro de usuário:', error);
+        res.status(500).json({ message: 'Erro interno do servidor ao registrar usuário.' });
+    }
 });
 
 app.post('/login', async (req, res) => {
@@ -155,7 +180,6 @@ app.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Credenciais inválidas.' });
     }
 
-    // O JWT_SECRET é acessado diretamente de process.env pelo jwt.sign e jwt.verify
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1y' });
 
     return res.status(200).json({
@@ -185,9 +209,6 @@ app.get('/profile', authenticateToken, async (req, res) => {
         username: true,
         score: true,
         createdAt: true,
-        // Adicione aqui outros campos que você quiser retornar para o perfil,
-        // como quizzesPlayed, wins, losses, favoriteCategory, etc., se existirem no seu modelo User.
-        // O campo pushToken não precisa ser retornado aqui, pois é interno para notificações.
       }
     });
 
@@ -202,22 +223,15 @@ app.get('/profile', authenticateToken, async (req, res) => {
   }
 });
 
-// --- ROTA EXISTENTE: Salvar/Atualizar push token ---
 app.post('/users/push-token', authenticateToken, async (req, res) => {
   const { token } = req.body;
-  const userId = req.user.userId; // Obtido do middleware de autenticação
+  const userId = req.user.userId; 
 
   if (!token) {
     return res.status(400).json({ message: "Token de notificação é obrigatório." });
   }
 
   try {
-    // Atualiza o pushToken do usuário.
-    // Se o token já existe e é de outro usuário, o `@unique` no Prisma vai tratar isso.
-    // Uma abordagem mais robusta para `unique` em `pushToken` pode envolver
-    // primeiro buscar se o token já está atribuído a alguém diferente do `userId` atual
-    // e, se sim, remover a atribuição anterior antes de atualizar.
-    // Por simplicidade, o Prisma lidará com a violação de unique constraint.
     await prisma.user.update({
       where: { id: userId },
       data: { pushToken: token }
@@ -225,7 +239,6 @@ app.post('/users/push-token', authenticateToken, async (req, res) => {
     res.status(200).json({ message: "Token de notificação salvo com sucesso." });
   } catch (error) {
     console.error("Erro ao salvar push token:", error);
-    // Se o erro for de unique constraint, pode ser que o token já esteja associado a outro usuário.
     if (error.code === 'P2002' && error.meta?.target?.includes('pushToken')) {
         console.warn(`Tentativa de atribuir FCM Token duplicado: ${token} para user ${userId}. Pode ser um token antigo de outro login.`);
         return res.status(409).json({ message: 'Este token já está em uso ou é inválido para esta conta.' });
@@ -235,9 +248,8 @@ app.post('/users/push-token', authenticateToken, async (req, res) => {
 });
 
 
-// --- NOVA ROTA: Obter perfil de um usuário específico por ID (para modal de amigo) ---
 app.get('/users/:userId', authenticateToken, async (req, res) => {
-  const targetUserId = req.params.userId; // ID do usuário que queremos buscar
+  const targetUserId = req.params.userId; 
 
   try {
     const user = await prisma.user.findUnique({
@@ -248,8 +260,6 @@ app.get('/users/:userId', authenticateToken, async (req, res) => {
         username: true,
         score: true,
         createdAt: true,
-        // Adicione outros campos de perfil que você quer exibir do amigo
-        // Ex: quizzesPlayed, wins, losses, favoriteCategory (se tiver no modelo User)
       }
     });
 
@@ -263,32 +273,27 @@ app.get('/users/:userId', authenticateToken, async (req, res) => {
   }
 });
 
-// --- NOVA ROTA: Listar usuários para a tela de amigos (simulação de "amigos em potencial") ---
 app.get('/users-light', authenticateToken, async (req, res) => {
   try {
-    // Retorna uma lista de usuários com informações básicas para a tela de amigos
-    // Exclui o próprio usuário logado da lista
     const users = await prisma.user.findMany({
       where: {
         id: {
-          not: req.user.userId // Exclui o usuário logado
+          not: req.user.userId 
         }
       },
       select: {
         id: true,
         username: true,
-        score: true, // Pontuação pode ser útil na lista de amigos
-        // status: true // Se você adicionar um campo 'status' (online/offline) no User model
+        score: true, 
       },
       orderBy: {
-        username: 'asc' // Ordena por nome de usuário para simular
+        username: 'asc' 
       }
     });
-    // Para simular o status 'Online'/'Offline'
     const usersWithStatus = users.map(user => ({
       ...user,
-      status: Math.random() > 0.5 ? 'Online' : 'Offline', // Simula status
-      avatar: 'user-circle' // Ícone padrão
+      status: Math.random() > 0.5 ? 'Online' : 'Offline', 
+      avatar: 'user-circle' 
     }));
     res.json(usersWithStatus);
   } catch (error) {
@@ -302,10 +307,10 @@ app.get('/rank', authenticateToken, async (req, res) => {
   try {
     const topPlayers = await prisma.user.findMany({
       orderBy: {
-        score: 'desc', // Ordena por pontuação em ordem decrescente
+        score: 'desc', 
       },
-      take: 100, // Limita aos 100 melhores jogadores (ou o que você preferir)
-      select: { // Seleciona apenas os campos necessários para o ranking
+      take: 100, 
+      select: { 
         id: true,
         username: true,
         score: true,
@@ -319,28 +324,23 @@ app.get('/rank', authenticateToken, async (req, res) => {
 });
 
 
-// --- NOVO MIDDLEWARE DE AUTORIZAÇÃO (Admin Check) ---
-// Este foi movido para antes de seu uso, para organização.
 const authorizeAdmin = async (req, res, next) => {
-  // `req.user` deve ter sido populado pelo `authenticateToken`
-  if (!req.user || !req.user.userId) { // Assegura que temos o ID do usuário do token
+  if (!req.user || !req.user.userId) { 
     return res.status(401).json({ message: 'Informações de usuário não disponíveis após autenticação.' });
   }
 
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user.userId },
-      select: { username: true } // Busque apenas o username, para otimizar
+      select: { username: true } 
     });
 
     if (!user) {
       return res.status(404).json({ message: 'Usuário não encontrado.' });
     }
 
-    // Verifica se o username do usuário logado é 'cleilsonalvino'
-    // IMPORTANTE: Se o seu `username` no DB é case-sensitive, considere `user.username.toLowerCase() === 'cleilsonalvino'.toLowerCase()`
     if (user.username === 'cleilsonalvino') {
-      next(); // Permite que a requisição continue
+      next(); 
     } else {
       res.status(403).json({ message: 'Acesso negado. Apenas administradores podem enviar notificações.' });
     }
@@ -351,89 +351,73 @@ const authorizeAdmin = async (req, res, next) => {
 };
 
 
-// --- O NOVO ENDPOINT: Enviar Notificações ---
+// --- O NOVO ENDPOINT: Enviar Notificações (Usando Firebase Admin SDK) ---
 app.post('/admin/send-notification', authenticateToken, authorizeAdmin, async (req, res) => {
-  const { title, body, data } = req.body; // 'data' são os dados personalizados do frontend
-  const FCM_SERVER_KEY = process.env.FCM_SERVER_KEY; // Sua chave do servidor FCM do .env
+    const { title, body, data } = req.body;
 
-  if (!FCM_SERVER_KEY) {
-    console.error("FCM_SERVER_KEY não configurada nas variáveis de ambiente!");
-    return res.status(500).json({ message: "Erro de configuração: Chave do servidor de notificações não encontrada." });
-  }
+    if (!title || !body) {
+        return res.status(400).json({ message: "Título e corpo da notificação são obrigatórios." });
+    }
 
-  if (!title || !body) {
-    return res.status(400).json({ message: "Título e corpo da notificação são obrigatórios." });
-  }
+    try {
+        const usersWithTokens = await prisma.user.findMany({
+            where: {
+                pushToken: {
+                    not: null,
+                    not: ''
+                }
+            },
+            select: {
+                pushToken: true
+            }
+        });
 
-  try {
-    // 1. Obter todos os pushTokens válidos do banco de dados
-    const usersWithTokens = await prisma.user.findMany({
-      where: {
-        pushToken: {
-          not: null, // Apenas usuários que têm um token
-          not: ''    // E que não seja vazio
+        const registrationTokens = usersWithTokens.map(user => user.pushToken).filter(Boolean);
+
+        if (registrationTokens.length === 0) {
+            console.log("Nenhum dispositivo encontrado com pushToken para enviar a notificação.");
+            return res.status(200).json({ message: "Nenhum dispositivo registrado para receber notificações." });
         }
-      },
-      select: {
-        pushToken: true
-      }
-    });
 
-    // Extrai apenas os tokens e filtra quaisquer valores falsy (como null ou undefined)
-    const registrationTokens = usersWithTokens.map(user => user.pushToken).filter(Boolean);
+        const message = {
+            notification: {
+                title: title,
+                body: body,
+            },
+            data: data || {}, // Dados personalizados
+        };
 
-    if (registrationTokens.length === 0) {
-      console.log("Nenhum dispositivo encontrado com pushToken para enviar a notificação.");
-      return res.status(200).json({ message: "Nenhum dispositivo registrado para receber notificações." });
+        // >>> CORREÇÃO AQUI: Use sendEachForMulticast ou sendAll <<<
+        // sendEachForMulticast é o mais recomendado, pois lida melhor com erros individuais
+        // e é mais moderno.
+        const response = await admin.messaging().sendEachForMulticast({
+            ...message, // Copia title, body, data
+            tokens: registrationTokens // Adiciona os tokens
+        });
+
+        console.log('Notificação enviada com sucesso pelo Admin SDK:', response.successCount, 'sucessos,', response.failureCount, 'falhas.');
+
+        if (response.failureCount > 0) {
+            console.warn(`FCM (Admin SDK): ${response.failureCount} notificações falharam.`);
+            response.responses.forEach((resp, idx) => {
+                if (!resp.success) {
+                    const failedToken = registrationTokens[idx];
+                    const errorMessage = resp.error?.message || 'Erro desconhecido';
+                    console.error(`Falha ao enviar para token ${failedToken}: ${errorMessage}`);
+                    // Lógica opcional para remover tokens inválidos
+                }
+            });
+        }
+
+        res.status(200).json({
+            message: `Notificação enviada com sucesso para ${response.successCount} dispositivo(s).`,
+            fcmResult: response 
+        });
+
+    } catch (error) {
+        console.error("Erro ao enviar notificação via Firebase Admin SDK:", error);
+        res.status(500).json({ message: "Erro interno do servidor ao processar o envio da notificação." });
     }
-
-    // 2. Preparar o payload da notificação para a API do FCM
-    const fcmMessage = {
-      notification: {
-        title: title,
-        body: body,
-      },
-      data: data || {}, // Inclui os dados personalizados enviados do frontend
-    };
-
-    // FCM permite enviar para múltiplos tokens (até 500 por requisição)
-    // Se você tiver mais de 500, você precisaria de uma lógica de lotes aqui.
-    // Para a maioria dos casos iniciais, enviar tudo de uma vez é suficiente.
-    const fcmResponse = await axios.post(
-      'https://fcm.googleapis.com/fcm/send',
-      {
-        registration_ids: registrationTokens, // Envia para múltiplos tokens
-        ...fcmMessage // Mescla o objeto de notificação e dados
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `key=${FCM_SERVER_KEY}`, // Autorização com sua chave secreta
-        },
-      }
-    );
-
-    // A resposta do FCM contém detalhes sobre o sucesso/falha de cada token
-    console.log('Resposta detalhada do FCM:', fcmResponse.data);
-
-    const successCount = fcmResponse.data.success;
-    const failureCount = fcmResponse.data.failure;
-
-    if (failureCount > 0) {
-      // Se houver falhas, você pode querer logar mais detalhes
-      console.warn(`FCM: ${failureCount} notificações falharam.`);
-      // Opcional: Lógica para remover tokens inválidos do DB, se houver falhas de "NotRegistered"
-    }
-
-    res.status(200).json({
-      message: `Notificação enviada com sucesso para ${successCount} dispositivo(s).`,
-      details: fcmResponse.data // Envia a resposta completa do FCM de volta ao frontend para depuração
-    });
-
-  } catch (error) {
-    console.error("Erro ao enviar notificação via FCM:", error.response ? error.response.data : error.message);
-    res.status(500).json({ message: "Erro ao processar o envio da notificação." });
-  }
 });
 
 // 2. Inicializa o MATCHMAKING com `io` e as funções de lógica do jogo.
@@ -444,6 +428,6 @@ io.on('connection', handleConnection);
 
 // Inicia o servidor Express e Socket.io
 server.listen(PORT, () => {
-  console.log(`Servidor backend rodando na porta ${PORT}`);
-  console.log(`Acesse: http://localhost:${PORT}`);
+  console.log(`Servidor backend rodando na porta ${PORT}`);
+  console.log(`Acesse: http://localhost:${PORT}`);
 });
