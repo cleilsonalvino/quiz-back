@@ -471,4 +471,4 @@ const matchmaking = (io, gameLogicFunctions, admin, prisma) => {
   return handleConnection;
 };
 
-module.exports = matchmaking;
+module.exports = {matchmaking, onlineUsers};

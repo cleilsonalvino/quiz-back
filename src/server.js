@@ -15,7 +15,9 @@ const admin = require("firebase-admin"); // <<< IMPORTANTE: Importe o firebase-a
 // const axios = require('axios');
 
 const authenticateToken = require("./authMiddleware");
-const matchmaking = require("./matchmaking");
+const matchmakingModule = require("./matchmaking"); // Importa o módulo completo
+const onlineUsers = matchmakingModule.onlineUsers;
+const matchmaking = matchmakingModule.matchmaking;
 const { initGameLogic, activeGames } = require("./gameLogic");
 
 const prisma = new PrismaClient();
@@ -338,6 +340,7 @@ app.get("/users/:userId", authenticateToken, async (req, res) => {
   }
 });
 
+// --- Rota /users-light (AGORA USARÁ onlineUsers para o status real) ---
 app.get("/users-light", authenticateToken, async (req, res) => {
   try {
     const users = await prisma.user.findMany({
@@ -355,11 +358,15 @@ app.get("/users-light", authenticateToken, async (req, res) => {
         username: "asc",
       },
     });
+
+    // --- MUDANÇA AQUI: Verifica o status com base no mapa onlineUsers ---
     const usersWithStatus = users.map((user) => ({
       ...user,
-      status: Math.random() > 0.5 ? "Online" : "Offline",
+      status: onlineUsers.has(user.id) ? "Online" : "Offline", // <-- AGORA É REAL!
       avatar: "user-circle",
     }));
+    // --- FIM DA MUDANÇA ---
+
     res.json(usersWithStatus);
   } catch (error) {
     console.error("Erro ao buscar lista de usuários para amigos:", error);
