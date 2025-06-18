@@ -15,6 +15,28 @@ model User {
   password  String
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
-  score     Int       @default(0) // Garanta que este campo existe
-  pushToken String?  @unique 
+  score     Int       @default(0)
+  pushToken String?   @unique
+
+  // Relações para as partidas
+  // player1Matches Match[] @relation("Player1Matches") // Se o User for Player1
+  // player2Matches Match[] @relation("Player2Matches") // Se o User for Player2
+  // A forma mais simples é apenas ter o ID do usuário na Match
+}
+
+// NOVO MODELO: Match
+model Match {
+  id            String    @id @default(uuid())
+  player1Id     String
+  player2Id     String
+  player1Username String // Para facilitar a consulta sem JOIN complexo
+  player2Username String // Para facilitar a consulta sem JOIN complexo
+  category      String
+  player1Score  Int
+  player2Score  Int
+  createdAt     DateTime  @default(now())
+  
+  // Opcional: Relacionamentos com o modelo User (descomente se for usar)
+  // player1     User      @relation("Player1Matches", fields: [player1Id], references: [id])
+  // player2     User      @relation("Player2Matches", fields: [player2Id], references: [id])
 }
