@@ -65,6 +65,8 @@ const endGame = async (gameId, reason = 'finished', { getGame, removeGame }) => 
 
     game.isFinished = true;
     if (game.questionTimer) clearInterval(game.questionTimer); 
+
+    
     
     console.log(`Backend: Finalizando jogo ${gameId}. Pontuações: P1=${game.player1.score}, P2=${game.player2 ? game.player2.score : 'N/A'}`);
 

@@ -81,13 +81,36 @@ const matchmaking = (io, gameLogicFunctions, admin, prisma) => {
     // LISTENERS DE SOCKET (O que o servidor "ouve" do cliente)
     // =================================================================
 
-    socket.on("user:online", ({ userId, username, fcmToken }) => {
-      onlineUsers.set(userId, { socketId: socket.id, username, fcmToken });
-      console.log(
-        `Backend: Usuário ${username} (${userId}) está online. Total: ${onlineUsers.size}`
-      );
-      console.log(`Backend: onlineUsers Map keys: ${Array.from(onlineUsers.keys())}`);
+socket.on("user:online", ({ userId, username, fcmToken }) => {
+  const existingUser = onlineUsers.get(userId);
+
+  // Se o usuário já estava online, mas com um socket.id diferente (indicando reconexão)
+  if (existingUser && existingUser.socketId !== socket.id) {
+    console.log(`Backend: Usuário ${username} (${userId}) reconectou. Atualizando socket.id de ${existingUser.socketId} para ${socket.id}.`);
+    // Cancelar qualquer timer de desconexão para o jogo ativo desse usuário
+    gameLogicFunctions.getActiveGames().forEach((game, gameId) => {
+      if ((game.player1.id === userId && game.player1.socketId === existingUser.socketId) || 
+          (game.player2?.id === userId && game.player2.socketId === existingUser.socketId)) {
+        cancelGracePeriod(gameId); // Função que você já tem!
+        
+        // **IMPORTANTE**: Atualizar o socketId no objeto do jogo `activeGames`
+        const playerRef = game.player1.id === userId ? game.player1 : game.player2;
+        if (playerRef) {
+          playerRef.socketId = socket.id;
+          console.log(`Backend: Socket ID do jogador ${username} (${userId}) atualizado no jogo ${gameId}.`);
+          io.to(gameId).emit("player:reconnected", { userId, username }); // Notificar outros jogadores (e o próprio)
+        }
+      }
     });
+  }
+
+  // Sempre atualiza o onlineUsers com o socket.id mais recente
+  onlineUsers.set(userId, { socketId: socket.id, username, fcmToken });
+  socket.userId = userId; // Armazenar o userId no objeto socket para fácil acesso no disconnect
+
+  console.log(`Backend: Usuário ${username} (${userId}) está online. Total: ${onlineUsers.size}`);
+  console.log(`Backend: onlineUsers Map keys: ${Array.from(onlineUsers.keys())}`);
+});
 
     // --- Matchmaking Público ---
     const handlePublicMatchmaking = (playerData, gameConfig) => {
@@ -425,47 +448,97 @@ const matchmaking = (io, gameLogicFunctions, admin, prisma) => {
     });
 
     // --- Disconexão ---
-    socket.on("disconnect", () => {
-      console.log(`Backend: Socket ${socket.id} desconectado.`);
-      const userId = getUserIdBySocketId(socket.id);
-      if (userId) {
-        onlineUsers.delete(userId);
-        console.log(`Backend: Usuário ${userId} removido de onlineUsers. Total: ${onlineUsers.size}`);
+socket.on("disconnect", (reason) => {
+  console.log(`Backend: Socket ${socket.id} desconectado. Razão: ${reason}`); // 'reason' é uma variável do evento disconnect
+  const userId = socket.userId; // Usar o userId armazenado no socket
+
+  if (userId) {
+    // Verificar se o socket que desconectou é o socket ATUALmente registrado para o usuário.
+    // Se não for, significa que o usuário já reconectou com um novo socket.id.
+    const currentUserData = onlineUsers.get(userId);
+    if (currentUserData && currentUserData.socketId === socket.id) {
+      onlineUsers.delete(userId); // Remove apenas se for o socket ID que realmente desconectou e não foi substituído
+      console.log(`Backend: Usuário ${userId} removido de onlineUsers. Total: ${onlineUsers.size}`);
+    } else if (currentUserData) {
+      console.log(`Backend: Socket ${socket.id} desconectou, mas usuário ${userId} já está conectado com novo socket ${currentUserData.socketId}.`);
+      // Não precisamos fazer mais nada, pois o usuário já reconectou.
+      return; // Sai da função de desconexão
+    } else {
+      console.log(`Backend: Socket ${socket.id} desconectou, mas userId ${userId} não encontrado em onlineUsers.`);
+    }
+  } else {
+      console.log(`Backend: Socket ${socket.id} desconectou, sem userId associado.`);
+  }
+
+  // A lógica de desconexão para jogos ativos ou pendentes continua,
+  // mas agora ela só será executada para sockets que realmente "sumiram"
+  // e não foram substituídos por uma reconexão.
+  gameLogicFunctions.getActiveGames().forEach((game, gameId) => {
+    // Verificamos se o socket que desconectou pertence a este jogo
+    const isPlayer1 = game.player1.socketId === socket.id;
+    const isPlayer2 = game.player2?.socketId === socket.id;
+
+    if (isPlayer1 || isPlayer2) {
+      // Obter o ID do usuário que desconectou do jogo
+      const disconnectedUserId = isPlayer1 ? game.player1.id : game.player2.id;
+      
+      // Antes de iniciar o timeout, verifique se o usuário já tem um novo socket.id
+      const currentOnlineUserData = onlineUsers.get(disconnectedUserId);
+      if (currentOnlineUserData && currentOnlineUserData.socketId !== socket.id) {
+          console.log(`Backend: Jogador ${disconnectedUserId} já reconectou para o jogo ${gameId}. Não iniciando grace period.`);
+          // Aqui é onde você garante que o socketId do jogo está atualizado com o novo socket.id.
+          // Isso já deve ter acontecido no 'user:online' se a reconexão for rápida.
+          // Mas para segurança, vamos garantir aqui também:
+          const playerRef = isPlayer1 ? game.player1 : game.player2;
+          playerRef.socketId = currentOnlineUserData.socketId;
+          cancelGracePeriod(gameId); // Cancela caso o timer já tivesse sido iniciado
+          return; // Não inicia o grace period se já reconectou
       }
 
-      // Lógica de desconexão para jogos ativos ou pendentes
-      gameLogicFunctions.getActiveGames().forEach((game, gameId) => {
-        if (game.player1.socketId === socket.id || game.player2?.socketId === socket.id) {
-          const timeout = setTimeout(() => {
-            if (gameLogicFunctions.getGame(gameId)) {
-              console.log(`Backend: Jogador não reconectou para ${gameId}. Encerrando partida.`);
-              gameLogicFunctions.endGame(gameId, "disconnect");
+      // Se o usuário *não* reconectou, inicie o grace period
+      if (!disconnectTimers.has(gameId)) { // Evita criar múltiplos timers
+        const timeout = setTimeout(() => {
+          // Re-verifica se o jogo ainda existe e se o jogador *ainda* não reconectou
+          // (i.e., se o socket.id no game object ainda é o antigo ou não há novo)
+          const latestGame = gameLogicFunctions.getGame(gameId);
+          if (latestGame) {
+            const playerInLatestGame = isPlayer1 ? latestGame.player1 : latestGame.player2;
+            // Se o socketId no jogo ainda é o que desconectou OU o jogador não está mais online
+            if (!playerInLatestGame || playerInLatestGame.socketId === socket.id || !onlineUsers.has(disconnectedUserId)) {
+                console.log(`Backend: Jogador ${disconnectedUserId} não reconectou para ${gameId}. Encerrando partida.`);
+                gameLogicFunctions.endGame(gameId, "disconnect", { getGame: gameLogicFunctions.getGame, removeGame: gameLogicFunctions.removeGame }); // Passar as dependências
+            } else {
+                console.log(`Backend: Jogador ${disconnectedUserId} reconectou para ${gameId} a tempo.`);
             }
-            disconnectTimers.delete(gameId);
-          }, 15000);
-          disconnectTimers.set(gameId, timeout);
-          console.log(`Backend: Grace period iniciado para jogo ${gameId} devido à desconexão de ${userId}.`);
-
-          const otherPlayer = game.player1.socketId === socket.id ? game.player2 : game.player1;
-          if (otherPlayer && otherPlayer.socketId) {
-            io.to(otherPlayer.socketId).emit("player:disconnected", { message: "Seu oponente se desconectou temporariamente..." });
           }
-        }
-      });
+          disconnectTimers.delete(gameId);
+        }, 15000);
+        disconnectTimers.set(gameId, timeout);
+        console.log(`Backend: Grace period iniciado para jogo ${gameId} devido à desconexão de ${disconnectedUserId}.`);
 
-      pendingChallenges.forEach((challenge, gameId) => {
-        if (challenge.challengerId === userId || challenge.opponentId === userId) {
-          clearTimeout(challenge.timeout);
-          pendingChallenges.delete(gameId);
-          console.log(`Backend: Desafio ${gameId} removido devido à desconexão de um dos participantes.`);
-          const otherId = challenge.challengerId === userId ? challenge.opponentId : challenge.challengerId;
-          const otherSocketData = onlineUsers.get(otherId);
-          if (otherSocketData && otherSocketData.socketId) {
-            io.to(otherSocketData.socketId).emit("desafio:cancelado", { message: "O desafio foi cancelado porque o outro jogador se desconectou." });
-          }
+        const otherPlayer = isPlayer1 ? game.player2 : game.player1;
+        if (otherPlayer && otherPlayer.socketId) {
+          io.to(otherPlayer.socketId).emit("player:disconnected", { message: "Seu oponente se desconectou temporariamente..." });
         }
-      });
-    });
+      }
+    }
+  });
+
+  // A lógica para desafios pendentes pode permanecer a mesma ou ser ajustada
+  // para considerar o `socket.userId` se preferir.
+  pendingChallenges.forEach((challenge, gameId) => {
+    if (challenge.challengerId === userId || challenge.opponentId === userId) {
+      clearTimeout(challenge.timeout);
+      pendingChallenges.delete(gameId);
+      console.log(`Backend: Desafio ${gameId} removido devido à desconexão de um dos participantes.`);
+      const otherId = challenge.challengerId === userId ? challenge.opponentId : challenge.challengerId;
+      const otherSocketData = onlineUsers.get(otherId);
+      if (otherSocketData && otherSocketData.socketId) {
+        io.to(otherSocketData.socketId).emit("desafio:cancelado", { message: "O desafio foi cancelado porque o outro jogador se desconectou." });
+      }
+    }
+  });
+});
   };
 
   return handleConnection;
