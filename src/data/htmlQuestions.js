@@ -240,7 +240,248 @@ const htmlQuestions = [
     ],
     "correctAnswer": "Um contêiner para incorporar outro documento HTML dentro do documento atual.",
     "subject": "HTML"
-  }
+  },
+  {
+    "id": 21,
+    "descricao": "Qual tag é usada para definir uma lista ordenada em HTML?",
+    "alternativas": [
+      "<ul>",
+      "<ol>",
+      "<li>",
+      "<dl>"
+    ],
+    "correctAnswer": "<ol>",
+    "subject": "HTML"
+  },
+  {
+    "id": 22,
+    "descricao": "Qual atributo é usado para especificar o destino de um link?",
+    "alternativas": [
+      "href",
+      "src",
+      "action",
+      "target"
+    ],
+    "correctAnswer": "href",
+    "subject": "HTML"
+  },
+  {
+    "id": 23,
+    "descricao": "Qual elemento HTML é usado para definir uma imagem?",
+    "alternativas": [
+      "<image>",
+      "<pic>",
+      "<img>",
+      "<src>"
+    ],
+    "correctAnswer": "<img>",
+    "subject": "HTML"
+  },
+  {
+    "id": 24,
+    "descricao": "Qual é a função do atributo 'alt' em uma tag <img>?",
+    "alternativas": [
+      "Define o estilo da imagem.",
+      "Fornece uma descrição alternativa da imagem.",
+      "Define o tamanho da imagem.",
+      "Especifica o link da imagem."
+    ],
+    "correctAnswer": "Fornece uma descrição alternativa da imagem.",
+    "subject": "HTML"
+  },
+  {
+    "id": 25,
+    "descricao": "Qual tag é usada para definir uma quebra de linha em HTML?",
+    "alternativas": [
+      "<br>",
+      "<hr>",
+      "<p>",
+      "<div>"
+    ],
+    "correctAnswer": "<br>",
+    "subject": "HTML"
+  },
+  {
+    "id": 26,
+    "descricao": "Qual é a tag usada para definir uma célula de cabeçalho em uma tabela HTML?",
+    "alternativas": [
+      "<th>",
+      "<td>",
+      "<tr>",
+      "<thead>"
+    ],
+    "correctAnswer": "<th>",
+    "subject": "HTML"
+  },
+  {
+    "id": 27,
+    "descricao": "Qual tag é usada para definir um parágrafo em HTML?",
+    "alternativas": [
+      "<p>",
+      "<para>",
+      "<text>",
+      "<section>"
+    ],
+    "correctAnswer": "<p>",
+    "subject": "HTML"
+  },
+  {
+    "id": 28,
+    "descricao": "Qual atributo é usado para especificar o endereço de um link?",
+    "alternativas": [
+      "href",
+      "src",
+      "action",
+      "target"
+    ],
+    "correctAnswer": "href",
+    "subject": "HTML"
+  },
+  {
+    "id": 29,
+    "descricao": "Qual tag é usada para definir uma lista não ordenada em HTML?",
+    "alternativas": [
+      "<ul>",
+      "<ol>",
+      "<li>",
+      "<dl>"
+    ],
+    "correctAnswer": "<ul>",
+    "subject": "HTML"
+  },
+  {
+    "id": 30,
+    "descricao": "Qual tag é usada para definir uma lista de definição em HTML?",
+    "alternativas": [
+      "<ul>",
+      "<ol>",
+      "<dl>",
+      "<li>"
+    ],
+    "correctAnswer": "<dl>",
+    "subject": "HTML"
+  },
+  {
+    "id": 31,
+    "descricao": "Qual tag é usada para definir um parágrafo em HTML?",
+    "alternativas": [
+      "<p>",
+      "<para>",
+      "<paragraph>",
+      "<text>"
+    ],
+    "correctAnswer": "<p>",
+    "subject": "HTML"
+  },
+  {
+    "id": 32,
+    "descricao": "Qual tag é usada para criar uma quebra de linha em HTML?",
+    "alternativas": [
+      "<break>",
+      "<br>",
+      "<lb>",
+      "<line>"
+    ],
+    "correctAnswer": "<br>",
+    "subject": "HTML"
+  },
+  {
+    "id": 33,
+    "descricao": "Qual tag é usada para definir um link em HTML?",
+    "alternativas": [
+      "<link>",
+      "<a>",
+      "<href>",
+      "<hyperlink>"
+    ],
+    "correctAnswer": "<a>",
+    "subject": "HTML"
+  },
+  {
+    "id": 34,
+    "descricao": "Qual atributo é usado para especificar o destino de um link em HTML?",
+    "alternativas": [
+      "href",
+      "src",
+      "link",
+      "url"
+    ],
+    "correctAnswer": "href",
+    "subject": "HTML"
+  },
+  {
+    "id": 35,
+    "descricao": "Qual tag é usada para definir uma lista não ordenada em HTML?",
+    "alternativas": [
+      "<ul>",
+      "<ol>",
+      "<li>",
+      "<list>"
+    ],
+    "correctAnswer": "<ul>",
+    "subject": "HTML"
+  },
+  {
+    "id": 36,
+    "descricao": "Qual tag é usada para definir uma lista ordenada em HTML?",
+    "alternativas": [
+      "<ul>",
+      "<ol>",
+      "<li>",
+      "<list>"
+    ],
+    "correctAnswer": "<ol>",
+    "subject": "HTML"
+  },
+  {
+    "id": 37,
+    "descricao": "Qual tag é usada para definir um item de lista em HTML?",
+    "alternativas": [
+      "<ul>",
+      "<ol>",
+      "<li>",
+      "<item>"
+    ],
+    "correctAnswer": "<li>",
+    "subject": "HTML"
+  },
+  {
+    "id": 38,
+    "descricao": "Qual tag é usada para definir uma tabela em HTML?",
+    "alternativas": [
+      "<table>",
+      "<tr>",
+      "<td>",
+      "<th>"
+    ],
+    "correctAnswer": "<table>",
+    "subject": "HTML"
+  },
+  {
+    "id": 39,
+    "descricao": "Qual tag é usada para definir uma linha em uma tabela HTML?",
+    "alternativas": [
+      "<table>",
+      "<tr>",
+      "<td>",
+      "<th>"
+    ],
+    "correctAnswer": "<tr>",
+    "subject": "HTML"
+  },
+  {
+    "id": 40,
+    "descricao": "Qual tag é usada para definir uma célula de dados em uma tabela HTML?",
+    "alternativas": [
+      "<table>",
+      "<tr>",
+      "<td>",
+      "<th>"
+    ],
+    "correctAnswer": "<td>",
+    "subject": "HTML"
+  },
+  
 ];
 
 module.exports = { htmlQuestions };
