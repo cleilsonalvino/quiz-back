@@ -8,22 +8,45 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String    @id @default(uuid())
-  email     String    @unique
-  username  String    @unique
-  password  String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  score     Int       @default(0)
-  pushToken String?   @unique
+model Friendship {
+  id        String   @id @default(uuid())
+  requester User     @relation("RequestedFriendships", fields: [requesterId], references: [id])
+  requesterId String
 
-  // Relações para as partidas
-  // player1Matches Match[] @relation("Player1Matches") // Se o User for Player1
-  // player2Matches Match[] @relation("Player2Matches") // Se o User for Player2
-  // A forma mais simples é apenas ter o ID do usuário na Match
+  addressee User     @relation("AddresseeFriendships", fields: [addresseeId], references: [id])
+  addresseeId String
+
+  status    FriendshipStatus @default(PENDING) // PENDING, ACCEPTED, DECLINED, BLOCKED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([requesterId, addresseeId]) // Garante que não haja solicitações duplicadas na mesma direção
 }
 
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  BLOCKED
+}
+
+// Opcional: Adicione a relação de amizades ao modelo User para fácil acesso
+model User {
+  id               String       @id @default(uuid())
+  username         String       @unique
+  email            String       @unique
+  password         String
+  score            Int          @default(0)
+  status           String       @default("Offline") // Online, Offline, In-Game
+  pushToken        String?      @unique
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  // Relações de amizade
+  requestedFriendships Friendship[] @relation("RequestedFriendships") // Amizades que este usuário solicitou
+  addresseeFriendships Friendship[] @relation("AddresseeFriendships") // Amizades que este usuário recebeu
+  // ... outras relações se tiver
+}
 // NOVO MODELO: Match
 model Match {
   id            String    @id @default(uuid())
