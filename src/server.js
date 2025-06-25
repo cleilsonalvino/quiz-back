@@ -19,6 +19,7 @@ const matchmakingModule = require("./matchmaking"); // Importa o módulo complet
 const onlineUsers = matchmakingModule.onlineUsers;
 const matchmaking = matchmakingModule.matchmaking;
 const { initGameLogic, activeGames } = require("./gameLogic");
+const setupFriendshipLogic = require("./friendshipLogic");
 
 const prisma = new PrismaClient();
 
@@ -58,6 +59,8 @@ if (!JWT_SECRET) {
   );
   process.exit(1);
 }
+
+const friendshipLogic = setupFriendshipLogic(io, prisma, onlineUsers);
 
 app.use(express.json());
 
@@ -210,116 +213,347 @@ app.post("/login", async (req, res) => {
 });
 
 app.get("/profile", authenticateToken, async (req, res) => {
-  const userId = req.user.userId;
+  // req.user.userId é o ID do usuário autenticado, fornecido pelo seu middleware authenticateToken
+  const userId = req.user.userId; 
+
+  console.log(`Backend: Buscando perfil e estatísticas para o usuário autenticado: ${userId}`);
 
   try {
+    // 1. Buscar os dados básicos do usuário
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: {
         id: true,
-        email: true,
         username: true,
+        email: true,
         score: true,
-        createdAt: true,
+        createdAt: true, // Mantendo createdAt conforme sua última versão
       },
     });
 
     if (!user) {
-      return res
-        .status(404)
-        .json({ message: "Perfil do usuário não encontrado." });
+      return res.status(404).json({ message: "Perfil do usuário não encontrado." });
     }
 
-    res.json(user);
-  } catch (error) {
-    console.error("Erro ao buscar perfil do usuário:", error);
-    res
-      .status(500)
-      .json({ message: "Erro interno do servidor ao buscar perfil." });
-  }
-});
-
-// --- NOVA ROTA: Obter Partidas Recentes de um Usuário ---
-app.get("/matches/user/:userId/recent", authenticateToken, async (req, res) => {
-  const targetUserId = req.params.userId;
-  // Converte o limite de string para número, padrão 5
-  const limit = parseInt(req.query.limit || '5', 10); 
-
-  // Opcional: Verificação de autorização (se um usuário pode ver as partidas de outro)
-  // if (req.user.userId !== targetUserId) {
-  //   return res.status(403).json({ message: "Acesso negado: Você não pode ver as partidas de outros usuários." });
-  // }
-
-  try {
-    // Lógica REAL: Buscar partidas do banco de dados usando Prisma
-    const recentMatches = await prisma.match.findMany({
+    // 2. Calcular estatísticas de partidas
+    // Total de quizzes jogados
+    const quizzesPlayed = await prisma.match.count({
       where: {
-        OR: [ // O usuário pode ser player1 ou player2
-          { player1Id: targetUserId },
-          { player2Id: targetUserId }
-        ]
+        OR: [{ player1Id: userId }, { player2Id: userId }],
       },
-      orderBy: {
-        createdAt: 'desc' // Ordena pelas mais recentes
-      },
-      take: limit, // Limita o número de resultados
-      // Você pode adicionar `select` aqui se quiser campos específicos
     });
 
-    console.log(`Backend: Retornando ${recentMatches.length} partidas recentes para o usuário ${targetUserId}.`);
-    // Envia os dados como JSON
-    res.json(recentMatches); 
+    // Vitórias
+    const wins = await prisma.match.count({
+      where: {
+        OR: [
+          // Usuário é player1 e player1Score é maior que player2Score
+          { player1Id: userId, player1Score: { gt: prisma.match.fields.player2Score } }, 
+          // Usuário é player2 e player2Score é maior que player1Score
+          { player2Id: userId, player2Score: { gt: prisma.match.fields.player1Score } }, 
+        ],
+      },
+    });
+
+    // Derrotas
+    const losses = await prisma.match.count({
+      where: {
+        OR: [
+          // Usuário é player1 e player1Score é menor que player2Score
+          { player1Id: userId, player1Score: { lt: prisma.match.fields.player2Score } }, 
+          // Usuário é player2 e player2Score é menor que player1Score
+          { player2Id: userId, player2Score: { lt: prisma.match.fields.player1Score } }, 
+        ],
+      },
+    });
+
+    // Empates (opcional, mas bom ter para consistência)
+    // const draws = await prisma.match.count({
+    //   where: {
+    //     AND: [
+    //       { OR: [{ player1Id: userId }, { player2Id: userId }] },
+    //       { player1Score: { equals: prisma.match.fields.player2Score } },
+    //     ],
+    //   },
+    // });
+
+    // Categoria Favorita (buscar todas as categorias de partidas do usuário e calcular a frequência)
+    const userMatches = await prisma.match.findMany({
+        where: {
+            OR: [{ player1Id: userId }, { player2Id: userId }],
+        },
+        select: {
+            category: true,
+        },
+    });
+
+    const categoryCounts = userMatches.reduce((acc, match) => {
+        acc[match.category] = (acc[match.category] || 0) + 1;
+        return acc;
+    }, {});
+
+    let favoriteCategory = null;
+    let maxCount = 0;
+    for (const category in categoryCounts) {
+        if (categoryCounts[category] > maxCount) {
+            maxCount = categoryCounts[category];
+            favoriteCategory = category;
+        }
+    }
+
+    // 3. Combinar os dados e enviar a resposta
+    const profileData = {
+      ...user, // Inclui todos os campos do usuário (id, username, email, score, createdAt)
+      quizzesPlayed: quizzesPlayed,
+      wins: wins,
+      losses: losses,
+      // draws: draws, // Se você calcular empates
+      favoriteCategory: favoriteCategory,
+    };
+
+    console.log(`Backend: Perfil e estatísticas retornados para ${user.username}`);
+    res.json(profileData);
 
   } catch (error) {
-    console.error(`Backend: Erro ao buscar partidas recentes para o usuário ${targetUserId}:`, error);
-    // Envia uma resposta JSON de erro, não HTML
-    res.status(500).json({ message: "Erro interno do servidor ao buscar partidas recentes." });
+    console.error(`Backend: Erro ao buscar perfil para o usuário ${userId}:`, error);
+    res.status(500).json({ message: "Erro interno do servidor ao buscar perfil." });
   }
 });
 
-app.post("/users/push-token", authenticateToken, async (req, res) => {
-  const { token } = req.body;
-  const userId = req.user.userId;
+app.post("/friends/request", authenticateToken, async (req, res) => {
+  const { friendId } = req.body;
+  const requesterId = req.user.userId; // `req.user` é definido por `authenticateToken`
+  try {
+    const request = await friendshipLogic.sendFriendRequest(
+      requesterId,
+      friendId
+    );
+    res.status(201).json(request);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
 
-  if (!token) {
+app.post("/friends/accept", authenticateToken, async (req, res) => {
+  const { requesterId } = req.body;
+  const userId = req.user.userId;
+  try {
+    const friendship = await friendshipLogic.acceptFriendRequest(
+      userId,
+      requesterId
+    );
+    res.json(friendship);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+app.post("/friends/decline", authenticateToken, async (req, res) => {
+  const { requesterId } = req.body;
+  const userId = req.user.userId;
+  try {
+    await friendshipLogic.declineFriendRequest(userId, requesterId);
+    res.json({ message: "Solicitação recusada com sucesso." });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+app.get("/friends/requests", authenticateToken, async (req, res) => {
+  const userId = req.user.userId;
+  try {
+    const requests = await friendshipLogic.getPendingFriendRequests(userId);
+    res.json(requests);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.get("/friends/accepted", authenticateToken, async (req, res) => {
+  const userId = req.user.userId;
+  try {
+    const friends = await friendshipLogic.getAcceptedFriends(userId);
+    res.json(friends);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.delete("/friends/delete/:friendId", authenticateToken, async (req, res) => {
+  const { friendId } = req.params;
+  const currentUserId = req.user.id; // Supondo que req.user.id vem do seu middleware de autenticação
+
+  try {
+    // Verifica se a amizade existe de ambas as direções
+    const friendship = await prisma.friendship.findFirst({
+      where: {
+        OR: [
+          {
+            requesterId: currentUserId,
+            addresseeId: friendId,
+            status: "ACCEPTED",
+          },
+          {
+            requesterId: friendId,
+            addresseeId: currentUserId,
+            status: "ACCEPTED",
+          },
+        ],
+      },
+    });
+
+    if (!friendship) {
+      return res.status(404).json({ message: "Amizade não encontrada ou não aceita." });
+    }
+
+    // Exclui o registro da amizade
+    await prisma.friendship.delete({
+      where: {
+        id: friendship.id, // Usa o ID do registro de amizade encontrado
+      },
+    });
+
+    res.status(200).json({ message: "Amigo removido com sucesso." });
+  } catch (error) {
+    console.error(`Erro ao remover amigo ${friendId}:`, error);
+    res.status(500).json({ message: "Erro interno do servidor ao remover amigo." });
+  }
+});
+// --- Rota de Busca de Usuário (precisa de autenticação para searchUser) ---
+app.get("/users/search", authenticateToken, async (req, res) => {
+  const { query } = req.query;
+  if (!query) {
     return res
       .status(400)
-      .json({ message: "Token de notificação é obrigatório." });
+      .json({ message: "Parâmetro de busca 'query' é obrigatório." });
   }
+  const currentUserId = req.user.userId; // O usuário logado não pode se adicionar
 
   try {
-    await prisma.user.update({
-      where: { id: userId },
-      data: { pushToken: token },
+    const users = await prisma.user.findMany({
+      where: {
+        username: {
+          contains: query, // Busca por username que contém a query
+          mode: "insensitive", // Case-insensitive (depende do DB)
+        },
+        id: {
+          not: currentUserId, // Exclui o próprio usuário da busca
+        },
+      },
+      select: {
+        id: true,
+        username: true,
+        score: true,
+        status: true, // Inclui o status online/offline
+      },
+      take: 10, // Limita resultados da busca
     });
-    res
-      .status(200)
-      .json({ message: "Token de notificação salvo com sucesso." });
-  } catch (error) {
-    console.error("Erro ao salvar push token:", error);
-    if (error.code === "P2002" && error.meta?.target?.includes("pushToken")) {
-      console.warn(
-        `Tentativa de atribuir FCM Token duplicado: ${token} para user ${userId}. Pode ser um token antigo de outro login.`
-      );
+    if (users.length === 0) {
       return res
-        .status(409)
-        .json({
-          message: "Este token já está em uso ou é inválido para esta conta.",
-        });
+        .status(404)
+        .json({ message: "Nenhum usuário encontrado com este nome." });
     }
-    res.status(500).json({ message: "Erro interno do servidor." });
+    res.json(users[0]); // Retorna apenas o primeiro resultado, como o seu frontend espera um único searchResult
+  } catch (error) {
+    console.error("Erro ao buscar usuário para adicionar amigo:", error);
+    res
+      .status(500)
+      .json({ message: "Erro interno do servidor ao buscar usuário." });
   }
 });
+
+app.get("/matches/user/:userId/history", authenticateToken, async (req, res) => {
+  const targetUserId = req.params.userId; // O ID do usuário cujo histórico está sendo solicitado.
+
+  // Opcional: Camada de segurança adicional.
+  // Se você quiser garantir que um usuário só possa ver o próprio histórico,
+  // descomente e use a linha abaixo. req.user.id viria do seu middleware authenticateToken.
+  // if (req.user.id !== targetUserId) {
+  //   return res.status(403).json({ message: "Acesso negado: Você não tem permissão para ver este histórico." });
+  // }
+
+  console.log(`Backend: Buscando histórico completo de partidas para o usuário ${targetUserId}`);
+
+  try {
+    // Busca todas as partidas no banco de dados usando Prisma
+    // onde o `targetUserId` é player1 OU player2.
+    const allMatches = await prisma.match.findMany({
+      where: {
+        OR: [
+          { player1Id: targetUserId }, // O usuário é o Jogador 1
+          { player2Id: targetUserId }, // O usuário é o Jogador 2
+        ],
+      },
+      orderBy: {
+        createdAt: "desc", // Ordena as partidas da mais recente para a mais antiga.
+      },
+      // NOTA: Não há `take: limit` aqui, pois queremos todas as partidas.
+    });
+
+    console.log(
+      `Backend: Retornando ${allMatches.length} partidas no histórico para o usuário ${targetUserId}.`
+    );
+    
+    // Envia o array de partidas como uma resposta JSON.
+    res.json(allMatches);
+  } catch (error) {
+    console.error(
+      `Backend: Erro ao buscar histórico de partidas para o usuário ${targetUserId}:`,
+      error
+    );
+    // Em caso de erro no servidor, retorna um status 500 com uma mensagem genérica.
+    res
+      .status(500)
+      .json({
+        message: "Erro interno do servidor ao buscar histórico de partidas.",
+      });
+  }
+});
+
+// app.post("/users/push-token", authenticateToken, async (req, res) => {
+//   const { token } = req.body;
+//   const userId = req.user.userId;
+
+//   if (!token) {
+//     return res
+//       .status(400)
+//       .json({ message: "Token de notificação é obrigatório." });
+//   }
+
+//   try {
+//     await prisma.user.update({
+//       where: { id: userId },
+//       data: { pushToken: token },
+//     });
+//     res
+//       .status(200)
+//       .json({ message: "Token de notificação salvo com sucesso." });
+//   } catch (error) {
+//     console.error("Erro ao salvar push token:", error);
+//     if (error.code === "P2002" && error.meta?.target?.includes("pushToken")) {
+//       console.warn(
+//         `Tentativa de atribuir FCM Token duplicado: ${token} para user ${userId}. Pode ser um token antigo de outro login.`
+//       );
+//       return res.status(409).json({
+//         message: "Este token já está em uso ou é inválido para esta conta.",
+//       });
+//     }
+//     res.status(500).json({ message: "Erro interno do servidor." });
+//   }
+// });
 
 app.get("/users/:userId", authenticateToken, async (req, res) => {
   const targetUserId = req.params.userId;
+  
+  console.log(`Buscando perfil do usuário ${targetUserId}`);
+   console.log(`Tipo do ID recebido: ${typeof targetUserId}`);
+
 
   try {
     const user = await prisma.user.findUnique({
       where: { id: targetUserId },
       select: {
         id: true,
-        email: true,
         username: true,
         score: true,
         createdAt: true,
@@ -331,6 +565,7 @@ app.get("/users/:userId", authenticateToken, async (req, res) => {
         .status(404)
         .json({ message: "Perfil do usuário não encontrado." });
     }
+    
     res.json(user);
   } catch (error) {
     console.error(`Erro ao buscar perfil do usuário ${targetUserId}:`, error);
@@ -400,11 +635,9 @@ app.get("/rank", authenticateToken, async (req, res) => {
 
 const authorizeAdmin = async (req, res, next) => {
   if (!req.user || !req.user.userId) {
-    return res
-      .status(401)
-      .json({
-        message: "Informações de usuário não disponíveis após autenticação.",
-      });
+    return res.status(401).json({
+      message: "Informações de usuário não disponíveis após autenticação.",
+    });
   }
 
   try {
@@ -420,21 +653,17 @@ const authorizeAdmin = async (req, res, next) => {
     if (user.username === "cleilsonalvino") {
       next();
     } else {
-      res
-        .status(403)
-        .json({
-          message:
-            "Acesso negado. Apenas administradores podem enviar notificações.",
-        });
+      res.status(403).json({
+        message:
+          "Acesso negado. Apenas administradores podem enviar notificações.",
+      });
     }
   } catch (error) {
     console.error("Erro na verificação de admin:", error);
-    res
-      .status(500)
-      .json({
-        message:
-          "Erro interno do servidor ao verificar permissões de administrador.",
-      });
+    res.status(500).json({
+      message:
+        "Erro interno do servidor ao verificar permissões de administrador.",
+    });
   }
 };
 
@@ -473,11 +702,9 @@ app.post(
         console.log(
           "Nenhum dispositivo encontrado com pushToken para enviar a notificação."
         );
-        return res
-          .status(200)
-          .json({
-            message: "Nenhum dispositivo registrado para receber notificações.",
-          });
+        return res.status(200).json({
+          message: "Nenhum dispositivo registrado para receber notificações.",
+        });
       }
 
       const message = {
@@ -530,19 +757,21 @@ app.post(
         "Erro ao enviar notificação via Firebase Admin SDK:",
         error
       );
-      res
-        .status(500)
-        .json({
-          message:
-            "Erro interno do servidor ao processar o envio da notificação.",
-        });
+      res.status(500).json({
+        message:
+          "Erro interno do servidor ao processar o envio da notificação.",
+      });
     }
   }
 );
 
 // 2. Inicializa o MATCHMAKING com `io` e as funções de lógica do jogo.
 // Isto retorna a função `handleConnection` que usaremos para cada novo socket.
-const handleConnection = matchmaking(io, gameLogicFunctions);
+const handleConnection = matchmaking(
+  io,
+  gameLogicFunctions,
+  setupFriendshipLogic
+);
 // --- Lógica do Socket.io ---
 io.on("connection", handleConnection);
 
