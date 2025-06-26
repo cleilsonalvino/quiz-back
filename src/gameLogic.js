@@ -8,6 +8,7 @@ const { javascriptQuestions } = require('./data/javascriptQuestions');
 const { pythonQuestions } = require('./data/pythonQuestions');
 const { cssQuestions } = require('./data/cssQuestions');
 const { portuguesConcursos } = require('./data/portuguesConcursos');
+const {matematicaConcursos} = require('./data/matematicaConcursos');
 
 const activeGames = new Map(); // Esta é a instância única de activeGames
 let ioInstance; // Armazena a instância do Socket.IO server
@@ -29,6 +30,7 @@ const getQuestionsByCategory = (categoryName) => {
         case 'Python': return pythonQuestions;
         case 'CSS': return cssQuestions;
         case 'Portugues': return portuguesConcursos;
+        case 'Matematica': return matematicaConcursos;
         default: return htmlQuestions;
     }
 };
