@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: banco-postgres
+    environment:
+      POSTGRES_USER: dbquiz
+      POSTGRES_PASSWORD: dbquiz
+      POSTGRES_DB: db-quiz
+    ports:
+      - "5433:5432"  # host:container, aqui mapeando 5433 para 5432 interno
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

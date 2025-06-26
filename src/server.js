@@ -3,7 +3,7 @@
 require("dotenv").config({ path: "./.env" }); // Ajuste o caminho se necessário
 
 console.log("JWT_SECRET carregado:", process.env.JWT_SECRET);
-
+const cors = require('cors');
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
@@ -41,16 +41,16 @@ const gameLogicFunctions = initGameLogic(io);
 // O caminho para o arquivo JSON da sua conta de serviço.
 // Certifique-se de que este caminho está CORRETO e o arquivo está SEGURO.
 // Renomeie 'firebase-service-account.json' para o nome do seu arquivo real.
-const serviceAccount = require("./firebase-service-account.json"); // <<< ATUALIZE O NOME DO ARQUIVO REAL AQUI!
+//const serviceAccount = require("./firebase-service-account.json"); // <<< ATUALIZE O NOME DO ARQUIVO REAL AQUI!
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-});
+// admin.initializeApp({
+//   credential: admin.credential.cert(serviceAccount),
+// });
 
-console.log("Firebase Admin SDK inicializado para notificações V1.");
+// console.log("Firebase Admin SDK inicializado para notificações V1.");
 // --- Fim da Configuração do Firebase Admin SDK ---
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3005;
 const JWT_SECRET = process.env.JWT_SECRET;
 
 if (!JWT_SECRET) {
@@ -62,6 +62,7 @@ if (!JWT_SECRET) {
 
 const friendshipLogic = setupFriendshipLogic(io, prisma, onlineUsers);
 
+app.use(cors());
 app.use(express.json());
 
 // --- Rotas RESTful ---
