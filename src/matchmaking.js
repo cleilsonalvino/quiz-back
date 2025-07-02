@@ -317,7 +317,7 @@ const matchmaking = (io, gameLogicFunctions, prisma) => {
 
                 if (gameToJoin) {
                     categoryQueue.delete(gameToJoin.id);
-                    gameToJoin.player2 = { id: userId, username: username, score: 0, socketId: socket.id, isReady: false, hasAnswered: false, };
+                    gameToJoin.player2 = { id: userId, username: username, score: 0, socketId: socket.id, isReady: false, hasAnswered: false, profileImage: true, };
                     gameLogicFunctions.addGame(gameToJoin.id, gameToJoin);
                     socket.join(gameToJoin.id);
                     io.to(gameToJoin.player1.socketId).emit("quickMatch:opponent_found", { message: `${username} encontrado! Iniciando partida...` });

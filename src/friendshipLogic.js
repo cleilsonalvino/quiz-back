@@ -18,6 +18,7 @@ const setupFriendshipLogic = (io, prisma, onlineUsers) => {
         username: true,
         score: true,      // <-- Adicionado: Necessário para o perfil do amigo e ranking
         createdAt: true,  // <-- Adicionado: Necessário para "Membro desde"
+        profileImage: true,
         // Adicione outros campos do User que você precisa aqui (e.g., avatar, email)
     };
 
@@ -220,6 +221,7 @@ const setupFriendshipLogic = (io, prisma, onlineUsers) => {
                 requesterUsername: req.requester.username,
                 requesterScore: req.requester.score, // <-- Adicionado: score do solicitante
                 requesterCreatedAt: req.requester.createdAt, // <-- Adicionado: createdAt do solicitante
+                requestsProfileImage: req.requester.profileImage, // <-- Adicionado: profileImage do solicitante
                 createdAt: req.createdAt,
             }));
         } catch (error) {
@@ -260,6 +262,7 @@ const setupFriendshipLogic = (io, prisma, onlineUsers) => {
                     status: isOnline ? "Online" : "Offline", // Determina status baseado no onlineUsers
                     score: friendUser.score,      // <-- Adicionado: score do amigo
                     createdAt: friendUser.createdAt, // <-- Adicionado: createdAt do amigo
+                    profileImage: friendUser.profileImage, // <-- Adicionado: profileImage do amigo
                     // Inclua quaisquer outros campos que você precisa no frontend aqui
                 };
             });

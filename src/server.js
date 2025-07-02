@@ -503,6 +503,7 @@ app.get("/users/search", authenticateToken, async (req, res) => {
                 username: true,
                 score: true,
                 status: true,
+                profileImage: true,
             },
             take: 10,
         });
@@ -606,6 +607,7 @@ app.get("/users/:userId", authenticateToken, async (req, res) => {
                 username: true,
                 score: true,
                 createdAt: true,
+                profileImage: true,
             },
         });
 
@@ -636,6 +638,7 @@ app.get("/users-light", authenticateToken, async (req, res) => {
                 id: true,
                 username: true,
                 score: true,
+                profileImage: true,
             },
             orderBy: {
                 username: "asc",
@@ -668,6 +671,7 @@ app.get("/rank", authenticateToken, async (req, res) => {
                 id: true,
                 username: true,
                 score: true,
+                profileImage: true,
             },
         });
         res.json(topPlayers);
