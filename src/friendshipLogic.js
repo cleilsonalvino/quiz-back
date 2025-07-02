@@ -1,6 +1,5 @@
 // src/friendshipLogic.js
 
-// FriendshipStatus para usar na lógica
 const FriendshipStatus = {
     PENDING: 'PENDING',
     ACCEPTED: 'ACCEPTED',
@@ -9,6 +8,19 @@ const FriendshipStatus = {
 };
 
 const setupFriendshipLogic = (io, prisma, onlineUsers) => {
+
+    /**
+     * Helper para selecionar campos comuns do usuário.
+     * Isso garante que todos os 'includes' de user em amizades sejam consistentes.
+     */
+    const userSelectFields = {
+        id: true,
+        username: true,
+        score: true,      // <-- Adicionado: Necessário para o perfil do amigo e ranking
+        createdAt: true,  // <-- Adicionado: Necessário para "Membro desde"
+        profileImage: true,
+        // Adicione outros campos do User que você precisa aqui (e.g., avatar, email)
+    };
 
     /**
      * Envia uma solicitação de amizade.
@@ -21,7 +33,6 @@ const setupFriendshipLogic = (io, prisma, onlineUsers) => {
             throw new Error("Você não pode enviar uma solicitação de amizade para si mesmo.");
         }
 
-        // Verifica se já existe uma amizade aceita
         const existingFriendship = await prisma.friendship.findFirst({
             where: {
                 OR: [
@@ -35,7 +46,6 @@ const setupFriendshipLogic = (io, prisma, onlineUsers) => {
             throw new Error("Vocês já são amigos.");
         }
 
-        // Verifica se já existe uma solicitação PENDING na mesma direção
         const existingPendingRequest = await prisma.friendship.findUnique({
             where: {
                 requesterId_addresseeId: {
@@ -49,8 +59,7 @@ const setupFriendshipLogic = (io, prisma, onlineUsers) => {
         if (existingPendingRequest) {
             throw new Error("Você já enviou uma solicitação para este usuário. Aguardando resposta.");
         }
-        
-        // Verifica se já existe uma solicitação PENDING na direção inversa
+
         const inversePendingRequest = await prisma.friendship.findUnique({
             where: {
                 requesterId_addresseeId: {
@@ -62,7 +71,6 @@ const setupFriendshipLogic = (io, prisma, onlineUsers) => {
         });
 
         if (inversePendingRequest) {
-            // Se já existe uma solicitação inversa, aceite-a automaticamente
             console.log(`[FriendshipLogic] Solicitação inversa encontrada. Aceitando automaticamente para ${requesterId} e ${addresseeId}.`);
             return acceptFriendRequest(requesterId, addresseeId); // requesterId é o addressee da solicitação inversa
         }
@@ -79,7 +87,6 @@ const setupFriendshipLogic = (io, prisma, onlineUsers) => {
             },
         });
 
-        // Notificar o usuário se ele estiver online
         const addresseeSocketData = onlineUsers.get(addresseeId);
         if (addresseeSocketData && addresseeSocketData.socketId) {
             io.to(addresseeSocketData.socketId).emit("friendship:request_received", {
@@ -127,7 +134,6 @@ const setupFriendshipLogic = (io, prisma, onlineUsers) => {
             },
         });
 
-        // Notificar ambos os usuários que a amizade foi aceita
         const user1SocketData = onlineUsers.get(updatedFriendship.requesterId);
         const user2SocketData = onlineUsers.get(updatedFriendship.addresseeId);
 
@@ -166,6 +172,8 @@ const setupFriendshipLogic = (io, prisma, onlineUsers) => {
             },
             include: {
                 requester: { select: { id: true, username: true } },
+                // Adicionado: Incluir o addressee para obter o username
+                addressee: { select: { id: true, username: true } } 
             },
         });
 
@@ -178,13 +186,12 @@ const setupFriendshipLogic = (io, prisma, onlineUsers) => {
             data: { status: FriendshipStatus.DECLINED },
         });
 
-        // Notificar o remetente que a solicitação foi recusada
         const requesterSocketData = onlineUsers.get(requesterId);
         if (requesterSocketData && requesterSocketData.socketId) {
             io.to(requesterSocketData.socketId).emit("friendship:declined", {
                 friendshipId: friendship.id,
                 addresseeId: userId,
-                addresseeUsername: friendship.addressee.username, // Precisaria buscar o nome do addressee
+                addresseeUsername: friendship.addressee.username, // Agora addressee.username estará disponível
                 message: `${friendship.addressee.username} recusou sua solicitação de amizade.`,
             });
         }
@@ -196,21 +203,31 @@ const setupFriendshipLogic = (io, prisma, onlineUsers) => {
      * @returns {Promise<Array>} Lista de solicitações recebidas.
      */
     const getPendingFriendRequests = async (userId) => {
-        const requests = await prisma.friendship.findMany({
-            where: {
-                addresseeId: userId,
-                status: FriendshipStatus.PENDING,
-            },
-            include: {
-                requester: { select: { id: true, username: true } },
-            },
-        });
-        return requests.map(req => ({
-            id: req.id,
-            requesterId: req.requesterId,
-            requesterUsername: req.requester.username,
-            createdAt: req.createdAt,
-        }));
+        console.log(`[FriendshipLogic] Buscando solicitações pendentes para userId: ${userId}`); // Log para depuração
+        try {
+            const requests = await prisma.friendship.findMany({
+                where: {
+                    addresseeId: userId,
+                    status: FriendshipStatus.PENDING,
+                },
+                include: {
+                    requester: { select: userSelectFields }, // <-- Usando os campos selecionados comuns
+                },
+            });
+            console.log(`[FriendshipLogic] Solicitações pendentes encontradas: ${requests.length}`); // Log para depuração
+            return requests.map(req => ({
+                id: req.id,
+                requesterId: req.requesterId,
+                requesterUsername: req.requester.username,
+                requesterScore: req.requester.score, // <-- Adicionado: score do solicitante
+                requesterCreatedAt: req.requester.createdAt, // <-- Adicionado: createdAt do solicitante
+                requestsProfileImage: req.requester.profileImage, // <-- Adicionado: profileImage do solicitante
+                createdAt: req.createdAt,
+            }));
+        } catch (error) {
+            console.error(`[FriendshipLogic] Erro em getPendingFriendRequests para ${userId}:`, error); // Log de erro
+            throw error;
+        }
     };
 
     /**
@@ -219,31 +236,42 @@ const setupFriendshipLogic = (io, prisma, onlineUsers) => {
      * @returns {Promise<Array>} Lista de amigos.
      */
     const getAcceptedFriends = async (userId) => {
-        const friendships = await prisma.friendship.findMany({
-            where: {
-                OR: [
-                    { requesterId: userId, status: FriendshipStatus.ACCEPTED },
-                    { addresseeId: userId, status: FriendshipStatus.ACCEPTED },
-                ],
-            },
-            include: {
-                requester: { select: { id: true, username: true } },
-                addressee: { select: { id: true, username: true } },
-            },
-        });
+        console.log(`[FriendshipLogic] Buscando amigos aceitos para userId: ${userId}`); // Log para depuração
+        try {
+            const friendships = await prisma.friendship.findMany({
+                where: {
+                    OR: [
+                        { requesterId: userId, status: FriendshipStatus.ACCEPTED },
+                        { addresseeId: userId, status: FriendshipStatus.ACCEPTED },
+                    ],
+                },
+                include: {
+                    requester: { select: userSelectFields }, // <-- Usando os campos selecionados comuns
+                    addressee: { select: userSelectFields }, // <-- Usando os campos selecionados comuns
+                },
+            });
 
-        // Mapear para retornar apenas os dados do amigo, não da amizade
-        const friends = friendships.map(f => {
-            const friendUser = f.requesterId === userId ? f.addressee : f.requester;
-            // Verifica o status online e adiciona
-            const isOnline = onlineUsers.has(friendUser.id);
-            return {
-                id: friendUser.id,
-                username: friendUser.username,
-                status: isOnline ? "Online" : "Offline", // Determina status baseado no onlineUsers
-            };
-        });
-        return friends;
+            console.log(`[FriendshipLogic] Amizades aceitas encontradas: ${friendships.length}`); // Log para depuração
+
+            const friends = friendships.map(f => {
+                const friendUser = f.requesterId === userId ? f.addressee : f.requester;
+                const isOnline = onlineUsers.has(friendUser.id);
+                return {
+                    id: friendUser.id,
+                    username: friendUser.username,
+                    status: isOnline ? "Online" : "Offline", // Determina status baseado no onlineUsers
+                    score: friendUser.score,      // <-- Adicionado: score do amigo
+                    createdAt: friendUser.createdAt, // <-- Adicionado: createdAt do amigo
+                    profileImage: friendUser.profileImage, // <-- Adicionado: profileImage do amigo
+                    // Inclua quaisquer outros campos que você precisa no frontend aqui
+                };
+            });
+            console.log(`[FriendshipLogic] Amigos aceitos formatados: ${friends.length} (ex: ${JSON.stringify(friends[0])})`); // Log detalhado
+            return friends;
+        } catch (error) {
+            console.error(`[FriendshipLogic] Erro em getAcceptedFriends para ${userId}:`, error); // Log de erro
+            throw error;
+        }
     };
 
 

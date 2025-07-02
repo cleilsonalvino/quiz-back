@@ -58,80 +58,88 @@ const removeGame = (gameId) => {
 
 // 1. endGame é definida primeiro, pois advanceToNextQuestion depende dela.
 const endGame = async (gameId, reason = 'finished', { getGame, removeGame }) => {
-    console.log(`--> FUNÇÃO endGame INICIADA para o jogo ${gameId}. Razão: ${reason}`);
-    const game = getGame(gameId);
-    if (!game || game.isFinished) {
-        if(game) console.log(`Backend: Tentativa de finalizar jogo ${gameId} que já terminou.`);
-        return;
-    }
+    console.log(`--> FUNÇÃO endGame INICIADA para o jogo ${gameId}. Razão: ${reason}`);
+    const game = getGame(gameId);
+    if (!game || game.isFinished) {
+        if(game) console.log(`Backend: Tentativa de finalizar jogo ${gameId} que já terminou.`);
+        return;
+    }
 
-    game.isFinished = true;
-    if (game.questionTimer) clearInterval(game.questionTimer); 
+    game.isFinished = true;
+    if (game.questionTimer) clearInterval(game.questionTimer); 
 
-    
-    
-    console.log(`Backend: Finalizando jogo ${gameId}. Pontuações: P1=${game.player1.score}, P2=${game.player2 ? game.player2.score : 'N/A'}`);
+    // Corrigido para garantir que player2 existe antes de tentar acessar score
+    const p1Score = game.player1 ? game.player1.score : 0;
+    const p2Score = game.player2 ? game.player2.score : 0;
+    
+    console.log(`Backend: Finalizando jogo ${gameId}. Pontuações: P1=${p1Score}, P2=${p2Score}`);
 
-    try {
-        if (game.player1) {
-            await prisma.user.update({
-                where: { id: game.player1.id },
-                data: { score: { increment: game.player1.score } }
-            });
-            console.log(`Backend: Pontuação de ${game.player1.username} (${game.player1.id}) atualizada.`);
-        }
-        if (game.player2 && game.player2.id !== 'BOT') {
-            await prisma.user.update({
-                where: { id: game.player2.id },
-                data: { score: { increment: game.player2.score } }
-            });
-            console.log(`Backend: Pontuação de ${game.player2.username} (${game.player2.id}) atualizada.`);
-        }
-    } catch (error) {
-        console.error(`Backend: Erro ao salvar pontuações para os usuários do jogo ${gameId}:`, error);
-    }
+    try {
+        if (game.player1) {
+            await prisma.user.update({
+                where: { id: game.player1.id },
+                data: { score: { increment: p1Score } } // Usar p1Score
+            });
+            console.log(`Backend: Pontuação de ${game.player1.username} (${game.player1.id}) atualizada.`);
+        }
+        if (game.player2 && game.player2.id !== 'BOT') {
+            await prisma.user.update({
+                where: { id: game.player2.id },
+                data: { score: { increment: p2Score } } // Usar p2Score
+            });
+            console.log(`Backend: Pontuação de ${game.player2.username} (${game.player2.id}) atualizada.`);
+        }
+    } catch (error) {
+        console.error(`Backend: Erro ao salvar pontuações para os usuários do jogo ${gameId}:`, error);
+    }
 
-    // --- Salvar o resultado da partida no banco de dados `Match` ---
-    try {
-        await prisma.match.create({
-            data: {
-                id: game.id,
-                player1Id: game.player1.id,
-                player2Id: game.player2 ? game.player2.id : 'BOT',
-                player1Username: game.player1.username,
-                player2Username: game.player2 ? game.player2.username : 'BOT',
-                category: game.config.category,
-                player1Score: game.player1.score,
-                player2Score: game.player2 ? game.player2.score : 0,
-            },
-        });
-        console.log(`Backend: Partida ${gameId} salva com sucesso no banco de dados.`);
-    } catch (dbError) {
-        console.error(`Backend: Erro CRÍTICO ao salvar partida ${gameId} no banco de dados:`, dbError);
-    }
-    // --- FIM DA LÓGICA DE SALVAMENTO ---
+    // --- Preparar finalScores para o banco de dados e para o frontend ---
+    const finalScoresForDB = [
+        { userId: game.player1.id, score: p1Score },
+        { userId: game.player2 ? game.player2.id : 'BOT', score: p2Score }
+    ];
 
-    const winnerId = (game.player1 && game.player2) ? 
-                     (game.player1.score > game.player2.score ? game.player1.id :
-                     (game.player2.score > game.player1.score ? game.player2.id : null)) :
-                     (game.player1 ? game.player1.id : null);
+    // --- Salvar o resultado da partida no banco de dados `Match` ---
+    try {
+        await prisma.match.create({
+            data: {
+                id: game.id, // O ID do jogo é o ID da partida
+                player1Id: game.player1.id,
+                player2Id: game.player2 ? game.player2.id : 'BOT',
+                player1Username: game.player1.username,
+                player2Username: game.player2 ? game.player2.username : 'BOT',
+                category: game.config.category,
+                player1Score: p1Score, // Usar p1Score
+                player2Score: p2Score, // Usar p2Score
+            },
+        });
+        console.log(`Backend: Partida ${gameId} salva com sucesso no banco de dados.`);
+    } catch (dbError) {
+        console.error(`Backend: Erro CRÍTICO ao salvar partida ${gameId} no banco de dados:`, dbError);
+    }
+    // --- FIM DA LÓGICA DE SALVAMENTO ---
 
-    console.log(`--> EMITINDO 'gameOver' para a sala ${gameId}`);
-    ioInstance.to(gameId).emit('gameOver', {
-        player1Score: game.player1 ? game.player1.score : 0,
-        player2Score: game.player2 ? game.player2.score : 0,
-        totalQuestions: game.questions.length,
-        category: game.config.category,
-        numQuestions: game.config.numQuestions,
-        quizTime: game.config.quizTime,
-        winnerId: winnerId,
-        reason: reason
-    });
+    const winnerId = (game.player1 && game.player2) ?
+                     (p1Score > p2Score ? game.player1.id :
+                     (p2Score > p1Score ? game.player2.id : null)) :
+                     (game.player1 ? game.player1.id : null); // Lógica para winnerId, ok como está
 
-    removeGame(gameId);
-    console.log(`Backend: Partida ${gameId} finalizada e removida de activeGames.`);
+    console.log(`--> EMITINDO 'gameOver' para a sala ${gameId}`);
+    // --- ESTA É A CORREÇÃO PRINCIPAL ---
+    ioInstance.to(gameId).emit('gameOver', {
+        gameId: game.id, // <--- ADICIONADO: O ID do jogo deve ser incluído aqui
+        finalScores: finalScoresForDB, // <--- ADICIONADO: Array com userId e score para cada jogador
+        winnerId: winnerId,
+        totalQuestions: game.questions.length, // Já estava aqui, ótimo!
+        category: game.config.category,       // Já estava aqui, ótimo!
+        numQuestions: game.config.numQuestions, // Já estava aqui, ótimo!
+        quizTime: game.config.quizTime,         // Já estava aqui, ótimo!
+        reason: reason
+    });
+
+    removeGame(gameId);
+    console.log(`Backend: Partida ${gameId} finalizada e removida de activeGames.`);
 };
-
 // 2. advanceToNextQuestion é definida em segundo, pois startGame depende dela.
 const advanceToNextQuestion = (gameId, { getGame, endGame, removeGame }) => { // Adicionado removeGame aqui
     const game = getGame(gameId);
