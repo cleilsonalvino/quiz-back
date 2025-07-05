@@ -13,6 +13,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 // REMOVIDO: const admin = require("firebase-admin"); // Não mais necessário
 const multer = require("multer");
+const { requestPasswordResetCode, resetPassword } = require('./src/services/updatePass'); // Ajuste o caminho
 
 // Diretório onde as imagens de perfil serão armazenadas
 const profileImagesDir = path.join(__dirname, 'uploads', 'profile-images');
@@ -377,6 +378,26 @@ app.post("/profile/upload-image", authenticateToken, upload.single('profileImage
         });
         res.status(500).json({ message: "Erro interno do servidor ao salvar a imagem de perfil." });
     }
+});
+
+app.post('/forgot-password/request-code', async (req, res) => {
+  const { identifier } = req.body;
+  const result = await requestPasswordResetCode(identifier);
+  if (result.success) {
+    res.status(200).json({ message: result.message });
+  } else {
+    res.status(400).json({ message: result.message });
+  }
+});
+
+app.post('/forgot-password/reset-password', async (req, res) => {
+  const { identifier, code, newPassword } = req.body;
+  const result = await resetPassword(identifier, code, newPassword);
+  if (result.success) {
+    res.status(200).json({ message: result.message });
+  } else {
+    res.status(400).json({ message: result.message });
+  }
 });
 
 
@@ -761,6 +782,18 @@ const handleConnection = matchmaking(
 
 // --- Lógica do Socket.io ---
 io.on("connection", handleConnection);
+
+//versionamento
+
+app.get('/app-version', (req, res) => {
+  res.json({
+    latestVersion: "1.0", // Altere para a versão mais recente
+    changelog: "📌 Correções de bugs\n🚀 Melhorias de desempenho\n",
+    // 💡 Adicione o campo updateUrl com o link correto da sua Play Store
+    updateUrl: "https://play.google.com/store/apps/details?id=com.cleilsonalvino.quiz" // Exemplo para Android
+    // Ou para iOS: "itms-apps://itunes.apple.com/app/idSEU_APP_ID"
+  });
+});
 
 // Inicia o servidor Express e Socket.io
 server.listen(PORT, () => {
