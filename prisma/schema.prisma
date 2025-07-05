@@ -43,6 +43,9 @@ model User {
   updatedAt        DateTime     @updatedAt
   profileImage         String? 
 
+  resetPasswordCode     String?   // O código de verificação (hash ou texto plano, dependendo da sua estratégia)
+  resetPasswordExpires  DateTime? // A data e hora de expiração do código
+
   // Relações de amizade
   requestedFriendships Friendship[] @relation("RequestedFriendships") // Amizades que este usuário solicitou
   addresseeFriendships Friendship[] @relation("AddresseeFriendships") // Amizades que este usuário recebeu
