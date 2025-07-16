@@ -1,4 +1,5 @@
 const { v4: uuidv4 } = require("uuid");
+const { criarBotHandler } = require('./botGame');
 
 // --- ESTRUTURAS DE DADOS GLOBAIS ---
 const pendingGamesByCategory = new Map();
@@ -11,6 +12,9 @@ let lastEmittedPendingListJson = "[]";
 
 // --- LÓGICA PRINCIPAL DE MATCHMAKING ---
 const matchmaking = (io, gameLogicFunctions, prisma) => {
+
+    const adicionarBotNaPartida = criarBotHandler(gameLogicFunctions, io);
+
 
     const emitPendingGamesList = () => {
         const pendingList = [];
@@ -257,37 +261,50 @@ const matchmaking = (io, gameLogicFunctions, prisma) => {
         });
 
         // --- Matchmaking Público (chamado pela MaitingRoomScreen) ---
-        socket.on(
-            "createGame",
-            ({ userId, username, category, numQuestions, quizTime }) => {
-                if (!userId || !username) {
-                    socket.emit("matchmaking:error", { message: "Dados do usuário ausentes. Por favor, faça login novamente." });
-                    console.warn(`[createGame] Tentativa de criar jogo sem userId ou username. userId: ${userId}, username: ${username}`);
-                    return;
-                }
-                if (isUserBusy(userId)) { // Não passa excludeGameId aqui, pois é um novo jogo/fila.
-                    socket.emit("matchmaking:error", { message: "Você já está em um jogo ou fila de espera!" });
-                    return;
-                }
+socket.on(
+  "createGame",
+  ({ userId, username, category, numQuestions, quizTime }) => {
+    if (!userId || !username) {
+      socket.emit("matchmaking:error", { message: "Dados do usuário ausentes. Por favor, faça login novamente." });
+      console.warn(`[createGame] Tentativa de criar jogo sem userId ou username. userId: ${userId}, username: ${username}`);
+      return;
+    }
+    if (isUserBusy(userId)) { // Não passa excludeGameId aqui, pois é um novo jogo/fila.
+      socket.emit("matchmaking:error", { message: "Você já está em um jogo ou fila de espera!" });
+      return;
+    }
 
-                if (!pendingGamesByCategory.has(category)) { pendingGamesByCategory.set(category, new Map()); }
-                const categoryQueue = pendingGamesByCategory.get(category);
+    if (!pendingGamesByCategory.has(category)) {
+      pendingGamesByCategory.set(category, new Map());
+    }
+    const categoryQueue = pendingGamesByCategory.get(category);
 
-                const newGame = {
-                    id: uuidv4(),
-                    player1: { id: userId, username: username, socketId: socket.id, score: 0, isReady: false, hasAnswered: false, },
-                    player2: null,
-                    questions: [], currentQuestionIndex: 0, isFinished: false,
-                    config: { category, numQuestions, quizTime },
-                };
-                gameLogicFunctions.addGame(newGame.id, newGame);
-                categoryQueue.set(newGame.id, newGame);
-                socket.join(newGame.id);
-                socket.emit("gameCreated", { gameId: newGame.id, message: `Partida de ${category} criada! Aguardando oponente...`, });
-                console.log(`[MATCHMAKING_PUBLIC] Usuário ${username} criou partida ${newGame.id} na fila de ${category}.`);
-                emitPendingGamesList();
-            }
-        );
+    const newGame = {
+      id: uuidv4(),
+      player1: { id: userId, username: username, socketId: socket.id, score: 0, isReady: false, hasAnswered: false },
+      player2: null,
+      questions: [],
+      currentQuestionIndex: 0,
+      isFinished: false,
+      config: { category, numQuestions, quizTime },
+    };
+
+    setTimeout(() => {
+      const stillWaitingGame = categoryQueue.get(newGame.id);
+      if (stillWaitingGame && !stillWaitingGame.player2) {
+        adicionarBotNaPartida(stillWaitingGame, categoryQueue);
+      }
+    }, 5000);
+
+    gameLogicFunctions.addGame(newGame.id, newGame);
+    categoryQueue.set(newGame.id, newGame);
+    socket.join(newGame.id);
+    socket.emit("gameCreated", { gameId: newGame.id, message: `Partida de ${category} criada! Aguardando oponente...` });
+    console.log(`[MATCHMAKING_PUBLIC] Usuário ${username} criou partida ${newGame.id} na fila de ${category}.`);
+    emitPendingGamesList();
+  }
+);
+
 
         socket.on(
             "joinGame",
@@ -304,6 +321,8 @@ const matchmaking = (io, gameLogicFunctions, prisma) => {
 
                 if (!pendingGamesByCategory.has(category)) { pendingGamesByCategory.set(category, new Map()); }
                 const categoryQueue = pendingGamesByCategory.get(category);
+
+
 
                 let gameToJoin = null;
                 for (let [gameId, game] of categoryQueue.entries()) {

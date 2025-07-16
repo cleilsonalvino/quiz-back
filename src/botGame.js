@@ -49,6 +49,14 @@ function criarBotHandler(gameLogicFunctions, io) {
         message: "Um QuizBot entrou na partida! Iniciando...",
         opponent: { id: botPlayer.id, username: botPlayer.username, isBot: true } // Envia dados do bot para o frontend
       });
+io.to(playerSocketId).emit('gameStarted', {
+  gameId: game.id,
+  config: game.config,
+  player1: game.player1,
+  player2: game.player2,
+  // outros dados se precisar
+});
+
       console.log(`[BOT_HANDLER] Evento 'quickMatch:opponent_found' emitido para o player1 (${game.player1.username}).`);
     } else {
       console.warn(`[BOT_HANDLER] Socket ID do Player1 não encontrado para a partida ${game.id}.`);
