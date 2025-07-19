@@ -699,6 +699,706 @@ const matematicaConcursos =
     "alternativas": ["A. 1/6", "B. 1/12", "C. 1/18", "D. 1/36", "E. 1/3"],
     "correctAnswer": "D. 1/36",
     "subject": "Matemática"
+  },
+  {
+    "id": "mt101",
+    "descricao": "O resultado de 15 - 5 * 2 é 20.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt102",
+    "descricao": "A área de um retângulo com lados 10 cm e 5 cm é 50 cm².",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt103",
+    "descricao": "O número 17 é um número primo.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt104",
+    "descricao": "A raiz quadrada de 81 é 9.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt105",
+    "descricao": "Um hexágono regular tem 8 lados.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt106",
+    "descricao": "25% de 400 é 100.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt107",
+    "descricao": "O resultado da soma 1/2 + 1/3 é 5/6.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt108",
+    "descricao": "O perímetro de um quadrado com lado de 6 cm é 24 cm.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt109",
+    "descricao": "O valor de 2 elevado à potência de 5 é 32.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt110",
+    "descricao": "A soma dos ângulos internos de qualquer triângulo é sempre 360 graus.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt111",
+    "descricao": "O número 0 é considerado um número natural.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt112",
+    "descricao": "A fórmula da área de um círculo é 2 * π * raio.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt113",
+    "descricao": "O dobro de 50 mais 10 é igual a 110.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt114",
+    "descricao": "Todo número par é divisível por 2.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt115",
+    "descricao": "Em uma proporção, o produto dos meios é igual ao produto dos extremos.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt116",
+    "descricao": "A fração 1/2 é equivalente a 3/6.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt117",
+    "descricao": "Os juros simples de um capital de R$ 100,00 a uma taxa de 10% ao ano, durante 1 ano, são de R$ 10,00.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt118",
+    "descricao": "A subtração possui a propriedade comutativa, ou seja, 5 - 3 é igual a 3 - 5.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt119",
+    "descricao": "O volume de um cubo com aresta de 3 cm é de 27 cm³.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt120",
+    "descricao": "O Mínimo Múltiplo Comum (MMC) entre 5 e 7 é 35.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt121",
+    "descricao": "O Máximo Divisor Comum (MDC) entre 12 e 18 é 6.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt122",
+    "descricao": "Um ângulo agudo é sempre maior que 90 graus.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt123",
+    "descricao": "O valor do número π (pi) é exatamente 3,14.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt124",
+    "descricao": "Todo número inteiro é também um número racional.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt125",
+    "descricao": "O resultado de (-5)² é -25.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt126",
+    "descricao": "Um triângulo pode ter dois ângulos retos (90°).",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt127",
+    "descricao": "A soma de dois números ímpares resulta sempre em um número par.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt128",
+    "descricao": "O número decimal 0,5 é maior que a fração 1/3.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt129",
+    "descricao": "A diagonal de um quadrado de lado 1 cm mede 2 cm.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt130",
+    "descricao": "O número 1 é classificado como um número primo.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt131",
+    "descricao": "Se a área de um quadrado é 64 cm², a medida de seu lado é 8 cm.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt132",
+    "descricao": "A expressão de produto notável (a + b)² é igual a a² + b².",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt133",
+    "descricao": "1000 gramas equivalem a 1 quilograma.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt134",
+    "descricao": "A probabilidade de sortear um ás de um baralho com 52 cartas é de 1/13.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt135",
+    "descricao": "A raiz cúbica de 64 é 4.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt136",
+    "descricao": "Um decágono é um polígono que possui 12 lados.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt137",
+    "descricao": "O sucessor do número inteiro -8 é -7.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt138",
+    "descricao": "50% de 50 é igual a 25.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt139",
+    "descricao": "A multiplicação de qualquer número por zero resulta em 1.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt140",
+    "descricao": "Um ângulo obtuso mede menos de 90 graus.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt141",
+    "descricao": "O resultado da divisão de 10 por 0 é 0.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt142",
+    "descricao": "Um triângulo isósceles possui todos os lados com medidas iguais.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt143",
+    "descricao": "O valor de 7! (sete fatorial) é 5040.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt144",
+    "descricao": "Uma hora é composta por 3600 segundos.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt145",
+    "descricao": "O número romano IX representa o número 11.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt146",
+    "descricao": "A fração 2/5 é representada pelo decimal 0,4.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt147",
+    "descricao": "Um círculo possui um número infinito de eixos de simetria.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt148",
+    "descricao": "O resultado da operação -4 - (-6) é -10.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt149",
+    "descricao": "A mediana do conjunto de dados {1, 2, 5, 8, 9} é 5.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt150",
+    "descricao": "A hipotenusa é sempre o maior lado de um triângulo retângulo.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt151",
+    "descricao": "O número 204 é divisível por 3.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt152",
+    "descricao": "Um quilômetro equivale a 100 metros.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt153",
+    "descricao": "A forma irredutível da fração 12/16 é 3/4.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt154",
+    "descricao": "O resultado de 3³ (três ao cubo) é 9.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt155",
+    "descricao": "Retas paralelas se cruzam em um único ponto.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt156",
+    "descricao": "O perímetro de um círculo é também chamado de sua circunferência.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt157",
+    "descricao": "Aumentar um valor em 100% é o mesmo que dobrá-lo.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt158",
+    "descricao": "A equação x² = -1 não possui solução no conjunto dos números reais.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt159",
+    "descricao": "O número 0,75 é um número irracional.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt160",
+    "descricao": "O sucessor de um número par é sempre um número ímpar.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt161",
+    "descricao": "Um ângulo raso mede exatamente 180 graus.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt162",
+    "descricao": "O resultado de 1 - 0,25 é 0,75.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt163",
+    "descricao": "Um pentágono possui 5 diagonais.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt164",
+    "descricao": "O produto de dois números negativos é um número negativo.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt165",
+    "descricao": "A moda de um conjunto de dados é o valor que aparece com maior frequência.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt166",
+    "descricao": "O valor de 10 elevado a 0 é 0.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt167",
+    "descricao": "Dois ângulos são complementares quando a soma deles é 90 graus.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt168",
+    "descricao": "O número 91 é um número primo.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt169",
+    "descricao": "A soma dos três primeiros números primos (2, 3, 5) é 10.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt170",
+    "descricao": "Uma dúzia e meia corresponde a 18 unidades.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt171",
+    "descricao": "O volume de uma pirâmide é um terço do volume de um prisma de mesma base e altura.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt172",
+    "descricao": "Um trilhão é representado pelo número 1 seguido de 9 zeros.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt173",
+    "descricao": "Na equação 5x = 0, o valor de x é 0.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt174",
+    "descricao": "Um losango é um quadrilátero com quatro ângulos retos.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt175",
+    "descricao": "O resultado de 0/10 é indefinido.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt176",
+    "descricao": "A média aritmética entre 4 e 10 é 7.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt177",
+    "descricao": "Todo quadrado é um retângulo.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt178",
+    "descricao": "150% de 20 é 30.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt179",
+    "descricao": "Um triângulo escaleno possui dois lados com a mesma medida.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt180",
+    "descricao": "O antecessor do número 1 é 0.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt181",
+    "descricao": "A fração 3/2 é maior que 1.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt182",
+    "descricao": "O resultado de 2 + 2 / 2 é 2.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt183",
+    "descricao": "Se o diâmetro de um círculo é 10 cm, seu raio mede 5 cm.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt184",
+    "descricao": "Um ano bissexto ocorre a cada 5 anos.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt185",
+    "descricao": "O número -10 é maior que -5.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt186",
+    "descricao": "O MMC (Mínimo Múltiplo Comum) de 4 e 6 é 24.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt187",
+    "descricao": "A soma das probabilidades de todos os resultados possíveis de um evento é 1.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt188",
+    "descricao": "O número 101 é um número composto.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt189",
+    "descricao": "Dois ângulos opostos pelo vértice são sempre congruentes (iguais).",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt190",
+    "descricao": "O resultado de 1/2 dividido por 1/4 é 2.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt191",
+    "descricao": "A raiz quadrada de um número negativo é um número real.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt192",
+    "descricao": "Um heptágono é um polígono com 7 lados.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt193",
+    "descricao": "O valor de cos(0°) é 0.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt194",
+    "descricao": "Em um triângulo retângulo, a soma dos quadrados dos catetos é igual ao quadrado da hipotenusa.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt195",
+    "descricao": "A união de dois conjuntos contém apenas os elementos que são comuns a ambos.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt196",
+    "descricao": "O número 53 é divisível por 3.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt197",
+    "descricao": "Um litro corresponde a 1000 mililitros.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt198",
+    "descricao": "Qualquer número elevado a 1 é igual a ele mesmo.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt199",
+    "descricao": "Um ângulo reto e um ângulo raso medem a mesma coisa.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Matemática"
+  },
+  {
+    "id": "mt200",
+    "descricao": "O dobro de -10 é -20.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Matemática"
   }
 ];
 

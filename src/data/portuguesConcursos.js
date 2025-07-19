@@ -939,6 +939,706 @@ const portuguesConcursos =
     "alternativas": ["A. metáfora", "B. metonímia", "C. antítese", "D. sinestesia", "E. hipérbole"],
     "correctAnswer": "B. metonímia", // Corrigido de "B" para "B. metonímia"
     "subject": "Português"
+  },
+  {
+    "id": "pt101",
+    "descricao": "Na frase 'Choveu muito ontem', o verbo 'chover' é impessoal, e a oração não possui sujeito.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt102",
+    "descricao": "A palavra 'hífen' é acentuada por ser uma paroxítona terminada em 'n'.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt103",
+    "descricao": "Na frase 'Ele comprou o livro', o termo 'o livro' funciona como objeto indireto.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Português"
+  },
+  {
+    "id": "pt104",
+    "descricao": "O uso da crase é obrigatório antes de pronomes de tratamento como 'Vossa Excelência'.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Português"
+  },
+  {
+    "id": "pt105",
+    "descricao": "A palavra 'mas' é uma conjunção adversativa, enquanto 'mais' é um advérbio de intensidade.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt106",
+    "descricao": "O gerúndio é uma forma nominal do verbo que indica uma ação em andamento, como em 'estou lendo'.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt107",
+    "descricao": "'Por que' (separado e sem acento) é usado no início de perguntas.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt108",
+    "descricao": "Um sujeito oculto é aquele que não aparece na oração, mas pode ser identificado pela desinência do verbo.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt109",
+    "descricao": "A frase 'Vende-se casas' apresenta a concordância verbal correta.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Português"
+  },
+  {
+    "id": "pt110",
+    "descricao": "'A gente vamos ao cinema' é uma construção gramaticalmente correta na norma culta.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Português"
+  },
+  {
+    "id": "pt111",
+    "descricao": "A palavra 'viagem' é um substantivo, enquanto 'viajem' é uma forma do verbo viajar.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt112",
+    "descricao": "A figura de linguagem presente em 'rios de lágrimas' é uma hipérbole.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt113",
+    "descricao": "O verbo 'assistir' com o sentido de 'ver' ou 'presenciar' exige a preposição 'a'.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt114",
+    "descricao": "A oração 'É necessário que você estude' contém uma oração subordinada substantiva subjetiva.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt115",
+    "descricao": "Na frase 'Ele chegou em casa', o uso da preposição 'em' está de acordo com a norma culta para verbos de movimento.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Português"
+  },
+  {
+    "id": "pt116",
+    "descricao": "A palavra ' gratuito' tem a pronúncia correta com a tônica na penúltima sílaba (gra-TUI-to).",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Português"
+  },
+  {
+    "id": "pt117",
+    "descricao": "O pronome 'cujo' concorda em gênero e número com o termo que o sucede.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt118",
+    "descricao": "A frase 'Há dez anos, eu me mudei' está correta, usando o verbo 'haver' para indicar tempo decorrido.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt119",
+    "descricao": "Um texto narrativo se caracteriza por expor fatos e dados sem a presença de um enredo ou personagens.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Português"
+  },
+  {
+    "id": "pt120",
+    "descricao": "A conjunção 'portanto' é classificada como conclusiva.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt121",
+    "descricao": "A frase 'Ela mesma organizou a festa' está gramaticalmente correta.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt122",
+    "descricao": "O oposto de 'bem' é 'mal', e o oposto de 'bom' é 'mau'.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt123",
+    "descricao": "O ponto e vírgula pode ser usado para separar itens de uma lista ou enumeração.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt124",
+    "descricao": "Na frase 'As notícias são boas', o termo 'boas' é o predicativo do sujeito.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt125",
+    "descricao": "O pronome 'lhe' pode funcionar como objeto direto em uma oração.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Português"
+  },
+  {
+    "id": "pt126",
+    "descricao": "Em 'Falou-se sobre a crise', o 'se' é um índice de indeterminação do sujeito.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt127",
+    "descricao": "A palavra 'rubrica' tem o acento tônico na primeira sílaba (RÚ-brica).",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Português"
+  },
+  {
+    "id": "pt128",
+    "descricao": "A expressão 'a fim de' (separado) indica finalidade, enquanto 'afim' (junto) indica semelhança.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt129",
+    "descricao": "O verbo 'implicar', no sentido de 'acarretar' ou 'resultar', é transitivo direto e não exige preposição.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt130",
+    "descricao": "Um aposto explicativo deve sempre vir separado por vírgulas.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt131",
+    "descricao": "A palavra 'meio', quando advérbio, é invariável, como em 'Ela ficou meio cansada'.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt132",
+    "descricao": "O vocativo é um termo da oração que sempre deve ser separado por vírgula.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt133",
+    "descricao": "A forma correta da concordância é 'É proibido entrada'.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Português"
+  },
+  {
+    "id": "pt134",
+    "descricao": "'Porque' (junto e sem acento) é usado para respostas e explicações.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt135",
+    "descricao": "O infinitivo é uma forma verbal que, por si só, não expressa tempo ou modo.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt136",
+    "descricao": "A frase 'O menino, que era esperto, resolveu o problema' contém uma oração subordinada adjetiva restritiva.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Português"
+  },
+  {
+    "id": "pt137",
+    "descricao": "Em 'Li o livro todo', a palavra 'todo' funciona como um advérbio.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Português"
+  },
+  {
+    "id": "pt138",
+    "descricao": "A regência do verbo 'esquecer' sem o pronome 'se' pede um objeto direto, como em 'Esqueci o livro'.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt139",
+    "descricao": "A figura de linguagem que consiste na repetição de sons consonantais é a assonância.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Português"
+  },
+  {
+    "id": "pt140",
+    "descricao": "'Porquê' (junto e com acento) é um substantivo e significa 'motivo' ou 'razão'.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt141",
+    "descricao": "O verbo 'haver', no sentido de 'existir', deve sempre ficar no singular.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt142",
+    "descricao": "A palavra 'paralelepípedo' é um exemplo de proparoxítona.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Português"
+  },
+  {
+    "id": "pt143",
+    "descricao": "A coesão textual refere-se à ligação lógica e harmoniosa entre as partes de um texto.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt144",
+    "descricao": "Na frase 'Ela necessita de ajuda', o termo 'de ajuda' é um complemento nominal.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Português"
+  },
+  {
+    "id": "pt145",
+    "descricao": "O uso de 'onde' deve se referir exclusivamente a lugares físicos.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt146",
+    "descricao": "O superlativo absoluto sintético do adjetivo 'magro' é 'magríssimo'.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Português"
+  },
+  {
+    "id": "pt147",
+    "descricao": "A expressão 'senão' (junto) pode significar 'do contrário' ou 'a não ser'.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt148",
+    "descricao": "A voz passiva analítica é formada pelo verbo 'ser' mais o particípio do verbo principal.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt149",
+    "descricao": "A palavra 'ideia' perdeu o acento agudo após o Novo Acordo Ortográfico.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt150",
+    "descricao": "A metonímia é a figura de linguagem que consiste em usar uma palavra por outra, havendo entre elas uma relação de proximidade.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt151",
+    "descricao": "O modo imperativo do verbo é usado para expressar ordens, pedidos ou conselhos.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt152",
+    "descricao": "A palavra 'através' pode ser sempre substituída por 'por meio de' sem alteração de sentido.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Português"
+  },
+  {
+    "id": "pt153",
+    "descricao": "Um período composto por subordinação possui orações que dependem sintaticamente umas das outras.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt154",
+    "descricao": "A crase nunca deve ser usada antes de palavras masculinas.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Português"
+  },
+  {
+    "id": "pt155",
+    "descricao": "Na frase 'Gosto de quem é sincero', a oração 'de quem é sincero' é subordinada substantiva objetiva indireta.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt156",
+    "descricao": "A palavra 'item' não é acentuada por ser uma paroxítona terminada em 'em'.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt157",
+    "descricao": "A intertextualidade ocorre quando um texto faz referência a outro texto preexistente.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt158",
+    "descricao": "O uso de 'há' para indicar tempo futuro, como em 'Daqui há dois dias', está correto.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Português"
+  },
+  {
+    "id": "pt159",
+    "descricao": "A ironia é uma figura de linguagem que consiste em dizer o contrário do que se quer expressar, geralmente com intenção crítica.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt160",
+    "descricao": "Na expressão 'tal qual', apenas o 'tal' concorda com o termo anterior.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Português"
+  },
+  {
+    "id": "pt161",
+    "descricao": "A palavra 'advogado' é pronunciada com um 'i' entre o 'd' e o 'v' (ad-i-vogado).",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Português"
+  },
+  {
+    "id": "pt162",
+    "descricao": "Um predicado verbo-nominal possui dois núcleos: um verbo e um nome (predicativo).",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt163",
+    "descricao": "O verbo 'preferir' rege a preposição 'do que', como em 'Prefiro mais cinema do que teatro'.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Português"
+  },
+  {
+    "id": "pt164",
+    "descricao": "A coerência textual diz respeito à estrutura lógica e semântica do texto, garantindo que ele faça sentido.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt165",
+    "descricao": "A palavra 'estava' é uma oxítona.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Português"
+  },
+  {
+    "id": "pt166",
+    "descricao": "O pronome relativo 'que' pode ser substituído por 'o qual' (e suas variações) para evitar ambiguidades.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt167",
+    "descricao": "Um texto descritivo se concentra em contar uma história com início, meio e fim.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Português"
+  },
+  {
+    "id": "pt168",
+    "descricao": "O adjunto adnominal tem a função de caracterizar ou determinar um substantivo.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt169",
+    "descricao": "A palavra 'súbito' é acentuada pela mesma regra de 'médico'.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt170",
+    "descricao": "A expressão 'em vez de' é usada para substituição, enquanto 'ao invés de' é usada para oposição.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt171",
+    "descricao": "A frase 'O livro foi lido por mim' está na voz ativa.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Português"
+  },
+  {
+    "id": "pt172",
+    "descricao": "Um hiato ocorre quando duas vogais estão juntas na mesma sílaba.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Português"
+  },
+  {
+    "id": "pt173",
+    "descricao": "A concordância nominal da palavra 'anexo' deve variar de acordo com o substantivo a que se refere.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt174",
+    "descricao": "O eufemismo é uma figura de linguagem que busca suavizar uma expressão ou ideia considerada rude ou desagradável.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt175",
+    "descricao": "O plural da palavra 'cidadão' é 'cidadões'.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Português"
+  },
+  {
+    "id": "pt176",
+    "descricao": "A frase 'Fazem cinco anos que não o vejo' está correta segundo a norma culta.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Português"
+  },
+  {
+    "id": "pt177",
+    "descricao": "O verbo 'custar', no sentido de 'ser difícil', deve ter como sujeito aquilo que é difícil.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt178",
+    "descricao": "A antítese é a aproximação de palavras ou ideias de sentidos opostos.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt179",
+    "descricao": "'Mal' com 'l' é um advérbio ou substantivo, enquanto 'mau' com 'u' é um adjetivo.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt180",
+    "descricao": "Usa-se a vírgula para separar o sujeito do predicado.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Português"
+  },
+  {
+    "id": "pt181",
+    "descricao": "O sujeito da oração 'Precisa-se de funcionários' é indeterminado.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt182",
+    "descricao": "A crase é facultativa antes de nomes próprios femininos.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt183",
+    "descricao": "A palavra 'pôde' (passado) é acentuada para se diferenciar de 'pode' (presente).",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt184",
+    "descricao": "Em 'Sua opinião é diferente da minha', a crase em 'à minha' é obrigatória.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Português"
+  },
+  {
+    "id": "pt185",
+    "descricao": "A forma 'visar', com sentido de 'almejar', é um verbo transitivo indireto que rege a preposição 'a'.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt186",
+    "descricao": "A conjunção 'conquanto' equivale a 'embora' e introduz uma oração concessiva.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt187",
+    "descricao": "Denotação refere-se ao sentido literal da palavra, enquanto conotação refere-se ao sentido figurado.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt188",
+    "descricao": "Na frase 'Estudamos para a prova', o termo 'para a prova' expressa uma ideia de causa.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Português"
+  },
+  {
+    "id": "pt189",
+    "descricao": "O pronome 'se' em 'Os namorados beijaram-se' indica reciprocidade.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt190",
+    "descricao": "A palavra 'tórax' é uma paroxítona acentuada.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt191",
+    "descricao": "O plural de 'guarda-chuva' é 'guardas-chuvas'.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Português"
+  },
+  {
+    "id": "pt192",
+    "descricao": "A elipse é a omissão de um termo que pode ser facilmente subentendido pelo contexto.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt193",
+    "descricao": "O verbo 'namorar' é transitivo direto, não exigindo preposição 'com'.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt194",
+    "descricao": "A frase 'Compramo-lo ontem' é um exemplo de colocação pronominal chamada ênclise.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt195",
+    "descricao": "A palavra 'subsídio' é corretamente pronunciada com o som de 'z' na letra 's'.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Português"
+  },
+  {
+    "id": "pt196",
+    "descricao": "A palavra 'contudo' é uma conjunção conclusiva.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Português"
+  },
+  {
+    "id": "pt197",
+    "descricao": "O pronome de tratamento 'Vossa Senhoria' é empregado para autoridades de alto escalão, como presidentes e reis.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Falso",
+    "subject": "Português"
+  },
+  {
+    "id": "pt198",
+    "descricao": "Um texto injuntivo tem como principal característica instruir ou dar ordens ao leitor.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt199",
+    "descricao": "A concordância do verbo 'ser' em frases que indicam datas ou horas deve ser feita com o numeral.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
+  },
+  {
+    "id": "pt200",
+    "descricao": "A expressão 'ao encontro de' significa 'em favor de', enquanto 'de encontro a' significa 'contra'.",
+    "alternativas": ["Verdadeiro", "Falso"],
+    "correctAnswer": "Verdadeiro",
+    "subject": "Português"
   }
 ];
 
