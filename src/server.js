@@ -787,7 +787,7 @@ io.on("connection", handleConnection);
 
 app.get('/app-version', (req, res) => {
   res.json({
-    latestVersion: "1.0", // Altere para a versão mais recente
+    latestVersion: "1.2", // Altere para a versão mais recente
     changelog: "📌 Correções de bugs\n🚀 Melhorias de na interface do app\n",
     // 💡 Adicione o campo updateUrl com o link correto da sua Play Store
     updateUrl: "https://play.google.com/store/apps/details?id=com.cleilsonalvino.quiz" // Exemplo para Android
