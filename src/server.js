@@ -842,36 +842,38 @@ app.get("/friends-with-unread", authenticateToken, async (req, res) => {
   try {
     const friendsData = await friendshipLogic.getAcceptedFriends(userId);
 
-    const friendsWithMessages = await Promise.all(
-      friendsData.map(async (friend) => {
-        const friendId = friend.requesterId === userId ? friend.addresseeId : friend.requesterId;
+const friendsWithMessages = await Promise.all(
+  friendsData.map(async (friend) => {
+    const friendId =
+      friend.requesterId === userId ? friend.addresseeId : friend.requesterId;
 
-        const lastMessage = await prisma.message.findFirst({
-          where: {
-            OR: [
-              { fromUserId: userId, toUserId: friendId },
-              { fromUserId: friendId, toUserId: userId },
-            ],
-          },
-          orderBy: { createdAt: "desc" },
-        });
+    const lastMessage = await prisma.message.findFirst({
+      where: {
+        OR: [
+          { fromUserId: userId, toUserId: friendId },
+          { fromUserId: friendId, toUserId: userId },
+        ],
+      },
+      orderBy: { createdAt: "desc" },
+    });
 
-        const unreadMessages = await prisma.message.count({
-          where: {
-            fromUserId: friendId,
-            toUserId: userId,
-            viewed: false,
-          },
-        });
+    const unreadMessages = await prisma.message.count({
+      where: {
+        fromUserId: friendId,
+        toUserId: userId,
+        read: false, // <-- ajuste aqui
+      },
+    });
 
-        return {
-          ...friend,
-          id: friendId, // garante que friend tenha id
-          lastMessage: lastMessage?.message || null,
-          unreadMessages,
-        };
-      })
-    );
+    return {
+      ...friend,
+      id: friendId,
+      lastMessage: lastMessage?.message || null,
+      unreadMessages,
+    };
+  })
+);
+
 
     res.json(friendsWithMessages);
   } catch (err) {
