@@ -911,7 +911,7 @@ app.post("/messages/mark-read/:friendId",authenticateToken, async (req, res) => 
       where: {
         fromUserId: friendId,
         toUserId: userId,
-        viewed: false,
+        read: false,
       },
       data: { viewed: true },
     });
@@ -929,7 +929,7 @@ app.get("/messages/unread-count", authenticateToken, async (req, res) => {
   try {
     const counts = await prisma.message.groupBy({
       by: ["fromUserId"],
-      where: { toUserId: userId, viewed: false },
+      where: { toUserId: userId, read: false },
       _count: { id: true },
     });
 
