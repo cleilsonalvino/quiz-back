@@ -861,7 +861,7 @@ const friendsWithMessages = await Promise.all(
       where: {
         fromUserId: friendId,
         toUserId: userId,
-        viewed: false, // <-- ajuste aqui
+        read: false, // <-- ajuste aqui
       },
     });
 
