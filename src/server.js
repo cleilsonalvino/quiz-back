@@ -840,48 +840,42 @@ app.get("/friends-with-unread", authenticateToken, async (req, res) => {
   const userId = req.user.userId;
 
   try {
-    // 1️⃣ Buscar todos os amigos aceitos
-    const friends = await friendshipLogic.getAcceptedFriends(userId);
+    const friendsData = await friendshipLogic.getAcceptedFriends(userId);
 
-    // 2️⃣ Para cada amigo, buscar última mensagem e contagem de não lidas
-const friendsWithMessages = await Promise.all(
-  friends.map(async (friend) => {
-    // Se friend.id não existir, tenta pegar do requester/addressee
-    const friendId =
-      friend.id || friend.userId || friend.friendId || 
-      friend.requesterId === userId ? friend.addresseeId : friend.requesterId;
+    const friendsWithMessages = await Promise.all(
+      friendsData.map(async (friend) => {
+        const friendId = friend.requesterId === userId ? friend.addresseeId : friend.requesterId;
 
-    const lastMessage = await prisma.message.findFirst({
-      where: {
-        OR: [
-          { fromUserId: userId, toUserId: friendId },
-          { fromUserId: friendId, toUserId: userId },
-        ],
-      },
-      orderBy: { createdAt: "desc" },
-    });
+        const lastMessage = await prisma.message.findFirst({
+          where: {
+            OR: [
+              { fromUserId: userId, toUserId: friendId },
+              { fromUserId: friendId, toUserId: userId },
+            ],
+          },
+          orderBy: { createdAt: "desc" },
+        });
 
-    const unreadMessages = await prisma.message.count({
-      where: {
-        fromUserId: friendId,
-        toUserId: userId,
-        viewed: false,
-      },
-    });
+        const unreadMessages = await prisma.message.count({
+          where: {
+            fromUserId: friendId,
+            toUserId: userId,
+            viewed: false,
+          },
+        });
 
-    return {
-      ...friend,
-      id: friendId, // garante que tenha id
-      lastMessage: lastMessage?.message || null,
-      unreadMessages,
-    };
-  })
-);
-
+        return {
+          ...friend,
+          id: friendId, // garante que friend tenha id
+          lastMessage: lastMessage?.message || null,
+          unreadMessages,
+        };
+      })
+    );
 
     res.json(friendsWithMessages);
-  } catch (error) {
-    console.error(error);
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Erro ao buscar amigos." });
   }
 });
