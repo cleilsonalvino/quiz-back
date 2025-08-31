@@ -844,35 +844,40 @@ app.get("/friends-with-unread", authenticateToken, async (req, res) => {
     const friends = await friendshipLogic.getAcceptedFriends(userId);
 
     // 2️⃣ Para cada amigo, buscar última mensagem e contagem de não lidas
-    const friendsWithMessages = await Promise.all(
-      friends.map(async (friend) => {
-        // Última mensagem entre os dois
-        const lastMessage = await prisma.message.findFirst({
-          where: {
-            OR: [
-              { fromUserId: userId, toUserId: friend.id },
-              { fromUserId: friend.id, toUserId: userId },
-            ],
-          },
-          orderBy: { createdAt: "desc" },
-        });
+const friendsWithMessages = await Promise.all(
+  friends.map(async (friend) => {
+    // Se friend.id não existir, tenta pegar do requester/addressee
+    const friendId =
+      friend.id || friend.userId || friend.friendId || 
+      friend.requesterId === userId ? friend.addresseeId : friend.requesterId;
 
-        // Contagem de mensagens não lidas do amigo
-        const unreadMessages = await prisma.message.count({
-          where: {
-            fromUserId: friend.id,
-            toUserId: userId,
-            viewed: false,
-          },
-        });
+    const lastMessage = await prisma.message.findFirst({
+      where: {
+        OR: [
+          { fromUserId: userId, toUserId: friendId },
+          { fromUserId: friendId, toUserId: userId },
+        ],
+      },
+      orderBy: { createdAt: "desc" },
+    });
 
-        return {
-          ...friend,
-          lastMessage: lastMessage?.message || null,
-          unreadMessages,
-        };
-      })
-    );
+    const unreadMessages = await prisma.message.count({
+      where: {
+        fromUserId: friendId,
+        toUserId: userId,
+        viewed: false,
+      },
+    });
+
+    return {
+      ...friend,
+      id: friendId, // garante que tenha id
+      lastMessage: lastMessage?.message || null,
+      unreadMessages,
+    };
+  })
+);
+
 
     res.json(friendsWithMessages);
   } catch (error) {
