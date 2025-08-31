@@ -913,7 +913,7 @@ app.post("/messages/mark-read/:friendId",authenticateToken, async (req, res) => 
         toUserId: userId,
         read: false,
       },
-      data: { viewed: true },
+      data: { read: true },
     });
     return res.json({ ok: true });
   } catch (err) {
