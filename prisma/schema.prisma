@@ -9,16 +9,16 @@ datasource db {
 }
 
 model Friendship {
-  id        String   @id @default(uuid())
-  requester User     @relation("RequestedFriendships", fields: [requesterId], references: [id])
+  id          String @id @default(uuid())
+  requester   User   @relation("RequestedFriendships", fields: [requesterId], references: [id])
   requesterId String
 
-  addressee User     @relation("AddresseeFriendships", fields: [addresseeId], references: [id])
+  addressee   User   @relation("AddresseeFriendships", fields: [addresseeId], references: [id])
   addresseeId String
 
   status    FriendshipStatus @default(PENDING) // PENDING, ACCEPTED, DECLINED, BLOCKED
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
 
   @@unique([requesterId, addresseeId]) // Garante que não haja solicitações duplicadas na mesma direção
 }
@@ -32,37 +32,52 @@ enum FriendshipStatus {
 
 // Opcional: Adicione a relação de amizades ao modelo User para fácil acesso
 model User {
-  id               String       @id @default(uuid())
-  username         String       @unique
-  email            String       @unique
-  password         String
-  score            Int          @default(0)
-  status           String       @default("Offline") // Online, Offline, In-Game
-  pushToken        String?      @unique
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
-  profileImage         String? 
+  id           String   @id @default(uuid())
+  username     String   @unique
+  email        String   @unique
+  password     String
+  score        Int      @default(0)
+  status       String   @default("Offline") // Online, Offline, In-Game
+  pushToken    String?  @unique
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  profileImage String?
 
-  resetPasswordCode     String?   // O código de verificação (hash ou texto plano, dependendo da sua estratégia)
-  resetPasswordExpires  DateTime? // A data e hora de expiração do código
+  resetPasswordCode    String? // O código de verificação (hash ou texto plano, dependendo da sua estratégia)
+  resetPasswordExpires DateTime? // A data e hora de expiração do código
 
   // Relações de amizade
   requestedFriendships Friendship[] @relation("RequestedFriendships") // Amizades que este usuário solicitou
   addresseeFriendships Friendship[] @relation("AddresseeFriendships") // Amizades que este usuário recebeu
+  messages             Message[]    @relation("SentMessages")
+  receivedMessages     Message[]    @relation("ReceivedMessages")
   // ... outras relações se tiver
 }
+
+model Message {
+  id        String   @id @default(uuid())
+  from      User     @relation("SentMessages", fields: [fromUserId], references: [id])
+  fromUserId String
+  to        User     @relation("ReceivedMessages", fields: [toUserId], references: [id])
+  toUserId  String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+
 // NOVO MODELO: Match
 model Match {
-  id            String    @id @default(uuid())
-  player1Id     String
-  player2Id     String
+  id              String   @id @default(uuid())
+  player1Id       String
+  player2Id       String
   player1Username String // Para facilitar a consulta sem JOIN complexo
   player2Username String // Para facilitar a consulta sem JOIN complexo
-  category      String
-  player1Score  Int
-  player2Score  Int
-  createdAt     DateTime  @default(now())
-  
+  category        String
+  player1Score    Int
+  player2Score    Int
+  createdAt       DateTime @default(now())
+
   // Opcional: Relacionamentos com o modelo User (descomente se for usar)
   // player1     User      @relation("Player1Matches", fields: [player1Id], references: [id])
   // player2     User      @relation("Player2Matches", fields: [player2Id], references: [id])

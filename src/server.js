@@ -83,6 +83,7 @@ const onlineUsers = matchmakingModule.onlineUsers;
 const matchmaking = matchmakingModule.matchmaking;
 const { initGameLogic, activeGames } = require("./gameLogic");
 const setupFriendshipLogic = require("./friendshipLogic");
+const { initializeChat } = require('./chat');
 
 const prisma = new PrismaClient();
 
@@ -803,6 +804,143 @@ app.get("/rank", authenticateToken, async (req, res) => {
   }
 });
 
+app.get("/messages/:userId", authenticateToken, async (req, res) => {
+  const { userId } = req.params;
+  const currentUserId = req.user.userId;
+
+  try {
+    const messages = await prisma.message.findMany({
+      where: {
+        OR: [
+          {
+            fromUserId: currentUserId,
+            toUserId: userId,
+          },
+          {
+            fromUserId: userId,
+            toUserId: currentUserId,
+          },
+        ],
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    });
+    res.json(messages);
+  } catch (error) {
+    console.error("Error fetching messages:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+
+// GET /friends-with-unread
+app.get("/friends-with-unread", authenticateToken, async (req, res) => {
+  const userId = req.user.userId; // Pegue o ID do usuário autenticado
+
+  try {
+    // 1. Buscar amigos aceitos
+    const friendships = await prisma.friendship.findMany({
+      where: {
+        status: "ACCEPTED",
+        OR: [
+          { requesterId: userId },
+          { addresseeId: userId }
+        ]
+      },
+      include: {
+        requester: true,
+        addressee: true,
+      }
+    });
+
+    const friends = friendships.map(f =>
+      f.requesterId === userId ? f.addressee : f.requester
+    );
+
+    // 2. Contagem de mensagens não lidas e última mensagem
+    const friendsWithMessages = await Promise.all(
+      friends.map(async (friend) => {
+        const lastMessage = await prisma.message.findFirst({
+          where: {
+            OR: [
+              { fromUserId: userId, toUserId: friend.id },
+              { fromUserId: friend.id, toUserId: userId },
+            ],
+          },
+          orderBy: { createdAt: "desc" },
+        });
+
+        const unreadMessagesCount = await prisma.message.count({
+          where: {
+            fromUserId: friend.id,
+            toUserId: userId,
+            viewed: false
+          }
+        });
+
+        return {
+          ...friend,
+          lastMessage: lastMessage?.message || null,
+          unreadMessages: unreadMessagesCount
+        };
+      })
+    );
+
+    return res.json(friendsWithMessages);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Erro ao buscar amigos." });
+  }
+});
+
+
+// POST /messages/mark-read/:friendId
+app.post("/messages/mark-read/:friendId",authenticateToken, async (req, res) => {
+  
+  const userId = req.user.userId;
+  const friendId = req.params.friendId;
+
+  console.log("MENSAGEM LIDA", userId)
+  
+
+  try {
+    await prisma.message.updateMany({
+      where: {
+        fromUserId: friendId,
+        toUserId: userId,
+        viewed: false,
+      },
+      data: { viewed: true },
+    });
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Erro ao marcar mensagens como lidas." });
+  }
+});
+
+// GET /messages/unread-count
+app.get("/messages/unread-count", authenticateToken, async (req, res) => {
+  const userId = req.user.userId;
+
+  try {
+    const counts = await prisma.message.groupBy({
+      by: ["fromUserId"],
+      where: { toUserId: userId, viewed: false },
+      _count: { id: true },
+    });
+
+    // Exemplo de resposta: [{ fromUserId: 2, _count: { id: 3 } }, ...]
+    res.json(counts);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Erro ao buscar mensagens não lidas." });
+  }
+});
+
+
+
 io.use(async (socket, next) => {
   const token = socket.handshake.auth.token;
   if (!token) {
@@ -837,14 +975,15 @@ const handleConnection = matchmaking(
 );
 
 // --- Lógica do Socket.io ---
+initializeChat(io);
 io.on("connection", handleConnection);
 
 //versionamento
 
 app.get("/app-version", (req, res) => {
   res.json({
-    latestVersion: "1.2", // Altere para a versão mais recente
-    changelog: "📌 Correções de bugs\n🚀 Melhorias de na interface do app\n",
+    latestVersion: "1.4", // Altere para a versão mais recente
+    changelog: "📌 Chat Disponível\n🚀 Atualize o aplicativo e converse com seus amigos\n",
     // 💡 Adicione o campo updateUrl com o link correto da sua Play Store
     updateUrl:
       "https://play.google.com/store/apps/details?id=com.cleilsonalvino.quiz", // Exemplo para Android
