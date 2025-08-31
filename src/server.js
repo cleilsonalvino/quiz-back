@@ -835,57 +835,73 @@ app.get("/messages/:userId", authenticateToken, async (req, res) => {
 
 
 // GET /friends-with-unread
+// GET /friends-with-unread
 app.get("/friends-with-unread", authenticateToken, async (req, res) => {
-  const userId = req.user.userId; // Pegue o ID do usuário autenticado
+  const userId = req.user.userId;
 
   try {
-    // 1. Buscar amigos aceitos
+    // 1️⃣ Buscar todos os amigos
     const friendships = await prisma.friendship.findMany({
       where: {
         status: "ACCEPTED",
         OR: [
           { requesterId: userId },
-          { addresseeId: userId }
-        ]
+          { addresseeId: userId },
+        ],
       },
       include: {
         requester: true,
         addressee: true,
-      }
+      },
     });
 
     const friends = friendships.map(f =>
       f.requesterId === userId ? f.addressee : f.requester
     );
 
-    // 2. Contagem de mensagens não lidas e última mensagem
-    const friendsWithMessages = await Promise.all(
-      friends.map(async (friend) => {
-        const lastMessage = await prisma.message.findFirst({
-          where: {
-            OR: [
-              { fromUserId: userId, toUserId: friend.id },
-              { fromUserId: friend.id, toUserId: userId },
-            ],
-          },
-          orderBy: { createdAt: "desc" },
-        });
+    const friendIds = friends.map(f => f.id);
 
-        const unreadMessagesCount = await prisma.message.count({
-          where: {
-            fromUserId: friend.id,
-            toUserId: userId,
-            viewed: false
-          }
-        });
+    if (friendIds.length === 0) {
+      return res.json([]);
+    }
 
-        return {
-          ...friend,
-          lastMessage: lastMessage?.message || null,
-          unreadMessages: unreadMessagesCount
-        };
-      })
-    );
+    // 2️⃣ Buscar últimas mensagens de todos os amigos em uma query
+    const lastMessages = await prisma.message.findMany({
+      where: {
+        OR: friendIds.map(id => ({
+          OR: [
+            { fromUserId: userId, toUserId: id },
+            { fromUserId: id, toUserId: userId },
+          ]
+        }))
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // 3️⃣ Contar mensagens não lidas de todos os amigos em uma query
+    const unreadCounts = await prisma.message.groupBy({
+      by: ['fromUserId'],
+      where: {
+        fromUserId: { in: friendIds },
+        toUserId: userId,
+        viewed: false,
+      },
+      _count: { _all: true },
+    });
+
+    // 4️⃣ Mapear resultados por amigo
+    const friendsWithMessages = friends.map(friend => {
+      const lastMsg = lastMessages.find(
+        msg => msg.fromUserId === friend.id || msg.toUserId === friend.id
+      );
+      const unread = unreadCounts.find(count => count.fromUserId === friend.id);
+
+      return {
+        ...friend,
+        lastMessage: lastMsg?.message || null,
+        unreadMessages: unread?._count?._all || 0,
+      };
+    });
 
     return res.json(friendsWithMessages);
   } catch (err) {
@@ -893,6 +909,7 @@ app.get("/friends-with-unread", authenticateToken, async (req, res) => {
     return res.status(500).json({ message: "Erro ao buscar amigos." });
   }
 });
+
 
 
 // POST /messages/mark-read/:friendId
