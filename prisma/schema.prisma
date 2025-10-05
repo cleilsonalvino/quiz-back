@@ -25,6 +25,8 @@ model User {
   email                            String       @unique
   username                         String       @unique
   password                         String
+  birthday                         DateTime?
+  gender                           String?
   createdAt                        DateTime     @default(now())
   updatedAt                        DateTime     @updatedAt
   score                            Int          @default(0)
@@ -52,7 +54,7 @@ model Match {
 }
 
 model Message {
-  id                            String   @id
+  id                            String   @id @default(uuid())
   fromUserId                    String
   toUserId                      String
   message                       String
