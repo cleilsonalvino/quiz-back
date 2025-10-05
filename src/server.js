@@ -135,65 +135,66 @@ app.post('/send-notification', authenticateToken, async (req, res) => {
     return res.status(400).json({ message: "title e body são obrigatórios." });
   }
 
+  console.log('oissssssssssssssssssssss')
+
   try {
-    // 1. Busca os tokens no banco de dados
+    // Busca todos os tokens ativos
     const usersWithTokens = await prisma.user.findMany({
       where: { pushToken: { not: null } },
       select: { pushToken: true },
     });
 
-    const tokens = usersWithTokens.map(u => u.pushToken);
+    const tokens = usersWithTokens.map(u => u.pushToken).filter(Boolean);
 
     if (tokens.length === 0) {
       return res.status(404).json({ message: "Nenhum token disponível para envio." });
     }
 
-    // 2. Monta a mensagem de DADOS para que o Notifee funcione
+    // Monta a mensagem para multicast
     const message = {
-      data: {
-        title,
-        body,
-      },
-      tokens: tokens,
+      data: { title, body }, // dados que podem ser acessados no app
+      tokens,
     };
 
-    // 3. Envia a notificação usando o SDK Admin
-    const response = await getMessaging().sendEachForMulticast(message);
+    const response = await getMessaging().sendMulticast(message);
 
     console.log(`${response.successCount} notificações enviadas com sucesso.`);
     res.json({
-        message: "Notificação enviada com sucesso!",
-        successCount: response.successCount,
-        failureCount: response.failureCount
+      message: "Notificação enviada com sucesso!",
+      successCount: response.successCount,
+      failureCount: response.failureCount,
+      responses: response.responses, // detalhamento de cada envio
     });
-
   } catch (error) {
     console.error("Erro ao enviar notificação via SDK:", error);
     res.status(500).json({ message: "Erro interno." });
   }
 });
 
-app.post("invite-match-notification", authenticateToken, async (req, res) => {
+app.post('/invite-match-notification', authenticateToken, async (req, res) => {
   const { title, body, token } = req.body;
   if (!title || !body || !token) {
     return res.status(400).json({ message: "title, body e token são obrigatórios." });
   }
+
+  console.log('oiedsdfsdfsdf')
+
+
   try {
     const message = {
-      data: {
-        title,
-        body,
-      },
-      token: token, // Envia para um único token
+      data: { title, body },
+      token, // envia para um único token
     };
+
     const response = await getMessaging().send(message);
-    console.log(`Notificação enviada com sucesso: ${response}`);  
+    console.log(`Notificação enviada com sucesso: ${response}`);
     res.json({ message: "Notificação enviada com sucesso!" });
   } catch (error) {
     console.error("Erro ao enviar notificação:", error);
     res.status(500).json({ message: "Erro interno ao enviar notificação." });
   }
 });
+
 
 
 
@@ -455,8 +456,7 @@ app.get("/profile", authenticateToken, async (req, res) => {
   }
 });
 
-app.post(
-  "/profile/upload-image",
+app.post("/profile/upload-image",
   authenticateToken,
   upload.single("profileImage"),
   async (req, res) => {
@@ -678,8 +678,7 @@ app.get("/users/search", authenticateToken, async (req, res) => {
   }
 });
 
-app.get(
-  "/matches/user/:userId/history",
+app.get("/matches/user/:userId/history",
   authenticateToken,
   async (req, res) => {
     const targetUserId = req.params.userId;
