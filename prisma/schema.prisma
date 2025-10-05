@@ -1,4 +1,3 @@
-// prisma/schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,18 +8,60 @@ datasource db {
 }
 
 model Friendship {
-  id        String   @id @default(uuid())
-  requester User     @relation("RequestedFriendships", fields: [requesterId], references: [id])
+  id          String           @id @default(uuid())
   requesterId String
-
-  addressee User     @relation("AddresseeFriendships", fields: [addresseeId], references: [id])
   addresseeId String
+  status      FriendshipStatus @default(PENDING)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  addressee   User             @relation("AddresseeFriendships", fields: [addresseeId], references: [id])
+  requester   User             @relation("RequestedFriendships", fields: [requesterId], references: [id])
 
-  status    FriendshipStatus @default(PENDING) // PENDING, ACCEPTED, DECLINED, BLOCKED
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  @@unique([requesterId, addresseeId])
+}
 
-  @@unique([requesterId, addresseeId]) // Garante que não haja solicitações duplicadas na mesma direção
+model User {
+  id                               String       @id @default(uuid())
+  email                            String       @unique
+  username                         String       @unique
+  password                         String
+  createdAt                        DateTime     @default(now())
+  updatedAt                        DateTime     @updatedAt
+  score                            Int          @default(0)
+  pushToken                        String?      @unique
+  status                           String       @default("Offline")
+  profileImage                     String?
+  resetPasswordCode                String?
+  resetPasswordExpires             DateTime?
+  addresseeFriendships             Friendship[] @relation("AddresseeFriendships")
+  requestedFriendships             Friendship[] @relation("RequestedFriendships")
+  Message_Message_fromUserIdToUser Message[]    @relation("Message_fromUserIdToUser")
+  Message_Message_toUserIdToUser   Message[]    @relation("Message_toUserIdToUser")
+}
+
+model Match {
+  id              String   @id @default(uuid())
+  player1Id       String
+  player2Id       String
+  player1Username String
+  player2Username String
+  category        String
+  player1Score    Int
+  player2Score    Int
+  createdAt       DateTime @default(now())
+}
+
+model Message {
+  id                            String   @id
+  fromUserId                    String
+  toUserId                      String
+  message                       String
+  createdAt                     DateTime @default(now())
+  replied                       Boolean  @default(false)
+  viewed                        Boolean  @default(false)
+  read                          Boolean? @default(false)
+  User_Message_fromUserIdToUser User     @relation("Message_fromUserIdToUser", fields: [fromUserId], references: [id])
+  User_Message_toUserIdToUser   User     @relation("Message_toUserIdToUser", fields: [toUserId], references: [id])
 }
 
 enum FriendshipStatus {
@@ -28,42 +69,4 @@ enum FriendshipStatus {
   ACCEPTED
   DECLINED
   BLOCKED
-}
-
-// Opcional: Adicione a relação de amizades ao modelo User para fácil acesso
-model User {
-  id               String       @id @default(uuid())
-  username         String       @unique
-  email            String       @unique
-  password         String
-  score            Int          @default(0)
-  status           String       @default("Offline") // Online, Offline, In-Game
-  pushToken        String?      @unique
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
-  profileImage         String? 
-
-  resetPasswordCode     String?   // O código de verificação (hash ou texto plano, dependendo da sua estratégia)
-  resetPasswordExpires  DateTime? // A data e hora de expiração do código
-
-  // Relações de amizade
-  requestedFriendships Friendship[] @relation("RequestedFriendships") // Amizades que este usuário solicitou
-  addresseeFriendships Friendship[] @relation("AddresseeFriendships") // Amizades que este usuário recebeu
-  // ... outras relações se tiver
-}
-// NOVO MODELO: Match
-model Match {
-  id            String    @id @default(uuid())
-  player1Id     String
-  player2Id     String
-  player1Username String // Para facilitar a consulta sem JOIN complexo
-  player2Username String // Para facilitar a consulta sem JOIN complexo
-  category      String
-  player1Score  Int
-  player2Score  Int
-  createdAt     DateTime  @default(now())
-  
-  // Opcional: Relacionamentos com o modelo User (descomente se for usar)
-  // player1     User      @relation("Player1Matches", fields: [player1Id], references: [id])
-  // player2     User      @relation("Player2Matches", fields: [player2Id], references: [id])
 }

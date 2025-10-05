@@ -1,0 +1,126 @@
+
+# Explicação dos Sockets do Jogo da Forca (match.js)
+
+Este arquivo detalha os eventos de socket utilizados no arquivo `match.js` para o Jogo da Forca. Todos os eventos são prefixados com `pais-game:` para evitar conflitos com outros jogos.
+
+## Eventos Emitidos pelo Cliente para o Servidor (Client -> Server)
+
+### `pais-game:matchmaking:leave_queue_or_room`
+- **Descrição:** Solicita que o usuário saia de qualquer fila de matchmaking ou sala de jogo em que esteja.
+- **Payload:** `{ userId: string }`
+  - `userId`: O ID do usuário que está saindo.
+
+### `pais-game:user:online`
+- **Descrição:** Notifica o servidor que um usuário está online e pronto para receber eventos.
+- **Payload:** `{ userId: string, username: string }`
+  - `userId`: O ID do usuário.
+  - `username`: O nome de usuário.
+
+### `pais-game:createGame`
+- **Descrição:** Cria uma nova partida pública de Jogo da Forca e a coloca na fila de matchmaking.
+- **Payload:** `{ userId: string, username: string, category: string, numQuestions: number, quizTime: number }`
+  - `userId`: O ID do usuário que está criando a partida.
+  - `username`: O nome de usuário.
+  - `category`: A categoria de palavras para o jogo.
+  - `numQuestions`: O número de questões da partida.
+  - `quizTime`: O tempo para cada questão.
+
+### `pais-game:createGameFriend`
+- **Descrição:** Cria uma nova partida privada de Jogo da Forca com um amigo.
+- **Payload:** `{ userId: string, username: string, category: string, numQuestions: number, quizTime: number, friendId: string }`
+  - `userId`: O ID do usuário que está criando a partida.
+  - `username`: O nome de usuário.
+  - `category`: A categoria de palavras para o jogo.
+  - `numQuestions`: O número de questões da partida.
+  - `quizTime`: O tempo para cada questão.
+  - `friendId`: O ID do amigo que será convidado para a partida.
+
+### `pais-game:joinGame`
+- **Descrição:** Tenta encontrar e se juntar a uma partida existente na fila de matchmaking. Se nenhuma partida compatível for encontrada, cria uma nova.
+- **Payload:** `{ userId: string, username: string, category: string, numQuestions: number, quizTime: number }`
+  - `userId`: O ID do usuário que está se juntando.
+  - `username`: O nome de usuário.
+  - `category`: A categoria de palavras para o jogo.
+  - `numQuestions`: O número de questões da partida.
+  - `quizTime`: O tempo para cada questão.
+
+### `pais-game:matchmaking:join_pending`
+- **Descrição:** Entra em uma partida específica que está pendente na lista de matchmaking.
+- **Payload:** `{ gameId: string, userId: string, username: string }`
+  - `gameId`: O ID da partida pendente.
+  - `userId`: O ID do usuário que está se juntando.
+  - `username`: O nome de usuário.
+
+### `pais-game:playerReadyForGame`
+- **Descrição:** Notifica o servidor que o jogador está pronto para começar a partida.
+- **Payload:** `{ gameId: string, userId: string }`
+  - `gameId`: O ID da partida.
+  - `userId`: O ID do usuário que está pronto.
+
+## Eventos Emitidos pelo Servidor para o Cliente (Server -> Client)
+
+### `pais-game:matchmaking:pending_list`
+- **Descrição:** Envia a lista atualizada de partidas públicas pendentes para todos os clientes.
+- **Payload:** `Array<{ gameId: string, category: string, player1Username: string, config: object, numQuestions: number, quizTime: number }>`
+  - Uma lista de objetos, cada um representando uma partida pendente.
+
+### `pais-game:gameStarted`
+- **Descrição:** Notifica os dois jogadores que a partida começou.
+- **Payload:** `{ gameId: string, config: object, player1: object, player2: object }`
+  - `gameId`: O ID da partida.
+  - `config`: As configurações da partida.
+  - `player1`: Informações sobre o jogador 1.
+  - `player2`: Informações sobre o jogador 2.
+
+### `pais-game:friendGameInvite`
+- **Descrição:** Notifica um jogador que ele foi convidado para uma partida por um amigo.
+- **Payload:** `{ gameId: string, config: object, player1: object, player2: object }`
+  - `gameId`: O ID da partida.
+  - `config`: As configurações da partida.
+  - `player1`: Informações sobre o jogador 1.
+  - `player2`: Informações sobre o jogador 2.
+
+### `pais-game:challenge:canceled`
+- **Descrição:** Notifica um jogador que um desafio foi cancelado.
+- **Payload:** `{ gameId: string, message: string }`
+  - `gameId`: O ID do desafio cancelado.
+  - `message`: Uma mensagem explicando o motivo do cancelamento.
+
+### `pais-game:user:disconnected_by_new_login`
+- **Descrição:** Notifica um usuário que ele foi desconectado porque fez login em outro dispositivo.
+- **Payload:** `{ message: string }`
+  - `message`: A mensagem de desconexão.
+
+### `pais-game:player:reconnected`
+- **Descrição:** Notifica os jogadores em uma partida que um oponente se reconectou.
+- **Payload:** `{ userId: string, username: string }`
+  - `userId`: O ID do usuário que se reconectou.
+  - `username`: O nome de usuário.
+
+### `pais-game:matchmaking:error`
+- **Descrição:** Envia uma mensagem de erro relacionada ao matchmaking para um cliente específico.
+- **Payload:** `{ message: string }`
+  - `message`: A mensagem de erro.
+
+### `pais-game:gameCreated`
+- **Descrição:** Confirma para um cliente que sua partida foi criada e está aguardando um oponente.
+- **Payload:** `{ gameId: string, message: string }`
+  - `gameId`: O ID da partida criada.
+  - `message`: Uma mensagem de confirmação.
+
+### `pais-game:quickMatch:opponent_found`
+- **Descrição:** Notifica ambos os jogadores que um oponente foi encontrado em uma partida rápida.
+- **Payload:** `{ message: string }`
+  - `message`: A mensagem de notificação.
+
+### `pais-game:player:disconnected`
+- **Descrição:** Notifica um jogador que seu oponente se desconectou temporariamente.
+- **Payload:** `{ message: string }`
+  - `message`: A mensagem de notificação.
+
+### `pais-game:challenge:response`
+- **Descrição:** Envia uma resposta a um desafio (aceito, recusado, expirado, etc.).
+- **Payload:** `{ type: string, gameId: string, message: string }`
+  - `type`: O tipo de resposta ('accepted', 'declined', 'expired', 'canceled', 'error').
+  - `gameId`: O ID do desafio.
+  - `message`: Uma mensagem descrevendo a resposta.

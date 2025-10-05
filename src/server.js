@@ -56,11 +56,10 @@ const upload = multer({
 });
 
 const authenticateToken = require("./authMiddleware");
-const matchmakingModule = require("./matchmaking");
-const onlineUsers = matchmakingModule.onlineUsers;
-const matchmaking = matchmakingModule.matchmaking;
+const { onlineUsers, matchmaking } = require("./matchmaking");
 const { initGameLogic, activeGames } = require("./gameLogic");
 const setupFriendshipLogic = require("./friendshipLogic");
+const { matchmakingPais } = require("./pais-game/match");
 
 const prisma = new PrismaClient();
 
@@ -780,14 +779,24 @@ const handleConnection = matchmaking(
     prisma // 'prisma' ainda é passado se for usado em matchmaking.js
 );
 
+const handleConnectionPais = matchmakingPais(
+    io,
+    gameLogicFunctions,
+    prisma
+);
+
+
 // --- Lógica do Socket.io ---
-io.on("connection", handleConnection);
+io.on("connection", (socket) => {
+  handleConnection(socket);
+  handleConnectionPais(socket);
+});
 
 //versionamento
 
 app.get('/app-version', (req, res) => {
   res.json({
-    latestVersion: "1.2", // Altere para a versão mais recente
+    latestVersion: "1.4", // Altere para a versão mais recente
     changelog: "📌 Correções de bugs\n🚀 Melhorias de na interface do app\n",
     // 💡 Adicione o campo updateUrl com o link correto da sua Play Store
     updateUrl: "https://play.google.com/store/apps/details?id=com.cleilsonalvino.quiz" // Exemplo para Android
