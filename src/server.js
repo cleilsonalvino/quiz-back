@@ -985,6 +985,7 @@ const handleConnectionPais = matchmakingPais(
 
 
 // --- Lógica do Socket.io ---
+initializeChat(io);
 io.on("connection", (socket) => {
   handleConnection(socket);
   handleConnectionPais(socket);
