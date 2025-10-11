@@ -35,6 +35,8 @@ model User {
   profileImage                     String?
   resetPasswordCode                String?
   resetPasswordExpires             DateTime?
+
+  perguntas                        Perguntas[]  @relation("Perguntas")
   addresseeFriendships             Friendship[] @relation("AddresseeFriendships")
   requestedFriendships             Friendship[] @relation("RequestedFriendships")
   Message_Message_fromUserIdToUser Message[]    @relation("Message_fromUserIdToUser")
@@ -65,6 +67,27 @@ model Message {
   User_Message_fromUserIdToUser User     @relation("Message_fromUserIdToUser", fields: [fromUserId], references: [id])
   User_Message_toUserIdToUser   User     @relation("Message_toUserIdToUser", fields: [toUserId], references: [id])
 }
+
+model Perguntas {
+  id        String   @id @default(uuid())
+  question  String
+  options   String[]
+  correctAnswer    String
+  subject   String
+  userId    String @map("userId")
+  user      User     @relation("Perguntas", fields: [userId], references: [id])
+
+  categoriaPerguntasId String
+  categoriaPerguntas   CategoriaPerguntas @relation("Perguntas", fields: [categoriaPerguntasId], references: [id])
+}
+
+model CategoriaPerguntas {
+  id        String   @id @default(uuid())
+  name      String
+
+  Perguntas Perguntas[] @relation("Perguntas")
+}
+
 
 enum FriendshipStatus {
   PENDING
