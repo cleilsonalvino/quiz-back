@@ -961,9 +961,9 @@ io.use(async (socket, next) => {
 // 2. Inicializa o MATCHMAKING com `io` e as funções de lógica do jogo.
 // O 'admin' foi removido dos parâmetros, pois não é mais usado.
 const handleConnection = matchmaking(
-    io,
-    gameLogicFunctions,
-    prisma // 'prisma' ainda é passado se for usado em matchmaking.js
+  io,
+  gameLogicFunctions,
+  prisma // 'prisma' ainda é passado se for usado em matchmaking.js
 );
 
 const handleConnectionPais = matchmakingPais(
