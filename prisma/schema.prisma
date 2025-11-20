@@ -35,6 +35,7 @@ model User {
   profileImage                     String?
   resetPasswordCode                String?
   resetPasswordExpires             DateTime?
+  googleId                         String?      @unique
 
   perguntas                        Perguntas[]  @relation("Perguntas")
   addresseeFriendships             Friendship[] @relation("AddresseeFriendships")

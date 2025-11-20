@@ -292,61 +292,58 @@ app.post("/register", async (req, res) => {
     res
       .status(500)
       .json({ message: "Erro interno do servidor ao registrar usuário." });
+    res.status(500).json({ message: "Erro interno ao registrar usuário." });
   }
 });
 
-app.post("/login", async (req, res) => {
-  const { identifier, password } = req.body;
 
-  if (!identifier || !password) {
-    return res
-      .status(400)
-      .json({ message: "E-mail/Nome de usuário e senha são obrigatórios." });
+app.post("/login", async (req, res) => {
+  const { email, password, googleId } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ message: "Email é obrigatório." });
   }
 
   try {
-    const user = await prisma.user.findFirst({
-      where: {
-        OR: [{ email: identifier }, { username: identifier }],
-      },
-    });
+    const user = await prisma.user.findUnique({ where: { email } });
 
     if (!user) {
-      return res.status(400).json({ message: "Credenciais inválidas." });
+      return res.status(404).json({ message: "Usuário não encontrado." });
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-
-    if (!isPasswordValid) {
-      return res.status(400).json({ message: "Credenciais inválidas." });
-    }
-
-    const token = jwt.sign(
-      {
-        userId: user.id,
-        username: user.username,
-      },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "1y",
+    // Se vier googleId → login por Google
+    if (googleId) {
+      if (!user.googleId) {
+        return res.status(400).json({ message: "Usuário não registrado com Google." });
       }
-    );
 
-    return res.status(200).json({
-      message: "Login realizado com sucesso!",
-      token: token,
+      if (user.googleId !== googleId) {
+        return res.status(401).json({ message: "Google ID inválido." });
+      }
+    } else {
+      // Senão → login normal
+      const validPassword = await bcrypt.compare(password, user.password);
+      if (!validPassword) {
+        return res.status(401).json({ message: "Senha incorreta." });
+      }
+    }
+
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
+      expiresIn: "1y",
+    });
+
+    return res.json({
+      token,
       userId: user.id,
       username: user.username,
       email: user.email,
-      score: user.score,
     });
   } catch (error) {
-    console.error("Erro no login de usuário:", error);
-    res
-      .status(500)
-      .json({ message: "Erro interno do servidor ao fazer login." });
+    res.status(500).json({ message: "Erro interno ao fazer login." });
   }
 });
+
+
 
 app.get("/profile", authenticateToken, async (req, res) => {
   const userId = req.user.userId;
