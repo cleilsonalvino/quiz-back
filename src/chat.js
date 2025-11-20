@@ -8,8 +8,10 @@ function initializeChat(io) {
     socket.join(socket.userId); // entra na sala do próprio usuário
 
     // Envio de mensagem privada
-    socket.on('private message', async ({ from, to, message }) => {
+    socket.on('private:message', async ({ from, to, message }) => {
       if (!from || !to || !message) return;
+
+      console.log('SMS',message)
 
       try {
         const newMessage = await prisma.message.create({

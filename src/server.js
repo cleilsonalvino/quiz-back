@@ -24,13 +24,13 @@ const http = require("http");
 const { Server } = require("socket.io");
 const { PrismaClient } = require("@prisma/client");
 const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
+const jwt = require("jsonwebtoken"); 
 // REMOVIDO: const admin = require("firebase-admin"); // Não mais necessário
 const multer = require("multer");
 const {
   requestPasswordResetCode,
   resetPassword,
-} = require("./src/services/updatePass"); // Ajuste o caminho
+} = require("./services/updatePass"); // Ajuste o caminho
 
 // Diretório onde as imagens de perfil serão armazenadas
 const profileImagesDir = path.join(__dirname, "uploads", "profile-images");
@@ -84,6 +84,7 @@ const matchmaking = matchmakingModule.matchmaking;
 const { initGameLogic, activeGames } = require("./gameLogic");
 const setupFriendshipLogic = require("./friendshipLogic");
 const { initializeChat } = require('./chat');
+const { matchmakingPais } = require("./pais-game/match");
 
 const prisma = new PrismaClient();
 
@@ -134,65 +135,66 @@ app.post('/send-notification', authenticateToken, async (req, res) => {
     return res.status(400).json({ message: "title e body são obrigatórios." });
   }
 
+  console.log('oissssssssssssssssssssss')
+
   try {
-    // 1. Busca os tokens no banco de dados
+    // Busca todos os tokens ativos
     const usersWithTokens = await prisma.user.findMany({
       where: { pushToken: { not: null } },
       select: { pushToken: true },
     });
 
-    const tokens = usersWithTokens.map(u => u.pushToken);
+    const tokens = usersWithTokens.map(u => u.pushToken).filter(Boolean);
 
     if (tokens.length === 0) {
       return res.status(404).json({ message: "Nenhum token disponível para envio." });
     }
 
-    // 2. Monta a mensagem de DADOS para que o Notifee funcione
+    // Monta a mensagem para multicast
     const message = {
-      data: {
-        title,
-        body,
-      },
-      tokens: tokens,
+      data: { title, body }, // dados que podem ser acessados no app
+      tokens,
     };
 
-    // 3. Envia a notificação usando o SDK Admin
-    const response = await getMessaging().sendEachForMulticast(message);
+    const response = await getMessaging().sendMulticast(message);
 
     console.log(`${response.successCount} notificações enviadas com sucesso.`);
     res.json({
-        message: "Notificação enviada com sucesso!",
-        successCount: response.successCount,
-        failureCount: response.failureCount
+      message: "Notificação enviada com sucesso!",
+      successCount: response.successCount,
+      failureCount: response.failureCount,
+      responses: response.responses, // detalhamento de cada envio
     });
-
   } catch (error) {
     console.error("Erro ao enviar notificação via SDK:", error);
     res.status(500).json({ message: "Erro interno." });
   }
 });
 
-app.post("invite-match-notification", authenticateToken, async (req, res) => {
+app.post('/invite-match-notification', authenticateToken, async (req, res) => {
   const { title, body, token } = req.body;
   if (!title || !body || !token) {
     return res.status(400).json({ message: "title, body e token são obrigatórios." });
   }
+
+  console.log('oiedsdfsdfsdf')
+
+
   try {
     const message = {
-      data: {
-        title,
-        body,
-      },
-      token: token, // Envia para um único token
+      data: { title, body },
+      token, // envia para um único token
     };
+
     const response = await getMessaging().send(message);
-    console.log(`Notificação enviada com sucesso: ${response}`);  
+    console.log(`Notificação enviada com sucesso: ${response}`);
     res.json({ message: "Notificação enviada com sucesso!" });
   } catch (error) {
     console.error("Erro ao enviar notificação:", error);
     res.status(500).json({ message: "Erro interno ao enviar notificação." });
   }
 });
+
 
 
 
@@ -240,36 +242,34 @@ app.delete("/delete-users/:id", authenticateToken, async (req, res) => {
 });
 
 app.post("/register", async (req, res) => {
-  const { email, username, password } = req.body;
+  const { email, username, password, googleId } = req.body;
 
-  if (!email || !username || !password) {
-    return res
-      .status(400)
-      .json({ message: "E-mail, nome de usuário e senha são obrigatórios." });
+  if (!email || !username) {
+    return res.status(400).json({ message: "Email e username são obrigatórios." });
+  }
+
+  if (!password && !googleId) {
+    return res.status(400).json({ message: "Informe uma senha ou googleId." });
   }
 
   try {
     const existingUser = await prisma.user.findFirst({
-      where: {
-        OR: [{ email: email }, { username: username }],
-      },
+      where: { OR: [{ email }, { username }] },
     });
 
     if (existingUser) {
-      return res
-        .status(409)
-        .json({ message: "E-mail ou nome de usuário já está em uso." });
+      return res.status(409).json({ message: "Email ou username já está em uso." });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = password ? await bcrypt.hash(password, 10) : null;
 
     const newUser = await prisma.user.create({
       data: {
         email,
         username,
         password: hashedPassword,
+        googleId: googleId || null,
         score: 0,
-        pushToken: null,
       },
     });
 
@@ -278,73 +278,65 @@ app.post("/register", async (req, res) => {
     });
 
     return res.status(201).json({
-      message: "Usuário registrado e logado com sucesso!",
-      token: token,
+      message: "Usuário registrado com sucesso!",
+      token,
       userId: newUser.id,
       username: newUser.username,
       email: newUser.email,
-      score: newUser.score,
     });
   } catch (error) {
-    console.error("Erro no registro de usuário:", error);
-    res
-      .status(500)
-      .json({ message: "Erro interno do servidor ao registrar usuário." });
+    res.status(500).json({ message: "Erro interno ao registrar usuário." });
   }
 });
 
-app.post("/login", async (req, res) => {
-  const { identifier, password } = req.body;
 
-  if (!identifier || !password) {
-    return res
-      .status(400)
-      .json({ message: "E-mail/Nome de usuário e senha são obrigatórios." });
+app.post("/login", async (req, res) => {
+  const { email, password, googleId } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ message: "Email é obrigatório." });
   }
 
   try {
-    const user = await prisma.user.findFirst({
-      where: {
-        OR: [{ email: identifier }, { username: identifier }],
-      },
-    });
+    const user = await prisma.user.findUnique({ where: { email } });
 
     if (!user) {
-      return res.status(400).json({ message: "Credenciais inválidas." });
+      return res.status(404).json({ message: "Usuário não encontrado." });
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-
-    if (!isPasswordValid) {
-      return res.status(400).json({ message: "Credenciais inválidas." });
-    }
-
-    const token = jwt.sign(
-      {
-        userId: user.id,
-        username: user.username,
-      },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "1y",
+    // Se vier googleId → login por Google
+    if (googleId) {
+      if (!user.googleId) {
+        return res.status(400).json({ message: "Usuário não registrado com Google." });
       }
-    );
 
-    return res.status(200).json({
-      message: "Login realizado com sucesso!",
-      token: token,
+      if (user.googleId !== googleId) {
+        return res.status(401).json({ message: "Google ID inválido." });
+      }
+    } else {
+      // Senão → login normal
+      const validPassword = await bcrypt.compare(password, user.password);
+      if (!validPassword) {
+        return res.status(401).json({ message: "Senha incorreta." });
+      }
+    }
+
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
+      expiresIn: "1y",
+    });
+
+    return res.json({
+      token,
       userId: user.id,
       username: user.username,
       email: user.email,
-      score: user.score,
     });
   } catch (error) {
-    console.error("Erro no login de usuário:", error);
-    res
-      .status(500)
-      .json({ message: "Erro interno do servidor ao fazer login." });
+    res.status(500).json({ message: "Erro interno ao fazer login." });
   }
 });
+
+
 
 app.get("/profile", authenticateToken, async (req, res) => {
   const userId = req.user.userId;
@@ -454,8 +446,7 @@ app.get("/profile", authenticateToken, async (req, res) => {
   }
 });
 
-app.post(
-  "/profile/upload-image",
+app.post("/profile/upload-image",
   authenticateToken,
   upload.single("profileImage"),
   async (req, res) => {
@@ -677,8 +668,7 @@ app.get("/users/search", authenticateToken, async (req, res) => {
   }
 });
 
-app.get(
-  "/matches/user/:userId/history",
+app.get("/matches/user/:userId/history",
   authenticateToken,
   async (req, res) => {
     const targetUserId = req.params.userId;
@@ -976,9 +966,19 @@ const handleConnection = matchmaking(
   prisma // 'prisma' ainda é passado se for usado em matchmaking.js
 );
 
+const handleConnectionPais = matchmakingPais(
+    io,
+    gameLogicFunctions,
+    prisma
+);
+
+
 // --- Lógica do Socket.io ---
 initializeChat(io);
-io.on("connection", handleConnection);
+io.on("connection", (socket) => {
+  handleConnection(socket);
+  handleConnectionPais(socket);
+});
 
 //versionamento
 
