@@ -1,10 +1,10 @@
-generator client {
-  provider = "prisma-client-js"
-}
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
 }
 
 model Friendship {
@@ -21,27 +21,28 @@ model Friendship {
 }
 
 model User {
-  id                               String       @id @default(uuid())
-  email                            String       @unique
-  username                         String       @unique
-  password                         String
-  birthday                         DateTime?
-  gender                           String?
-  createdAt                        DateTime     @default(now())
-  updatedAt                        DateTime     @updatedAt
-  score                            Int          @default(0)
-  pushToken                        String?      @unique
-  status                           String       @default("Offline")
-  profileImage                     String?
-  resetPasswordCode                String?
-  resetPasswordExpires             DateTime?
-  googleId                         String?      @unique
+  id                   String    @id @default(uuid())
+  email                String    @unique
+  username             String    @unique
+  password             String?
+  birthday             DateTime?
+  gender               String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  score                Int       @default(0)
+  pushToken            String?   @unique
+  status               String    @default("Offline")
+  profileImage         String?
+  resetPasswordCode    String?
+  resetPasswordExpires DateTime?
+  googleId             String?   @unique
 
-  perguntas                        Perguntas[]  @relation("Perguntas")
-  addresseeFriendships             Friendship[] @relation("AddresseeFriendships")
-  requestedFriendships             Friendship[] @relation("RequestedFriendships")
-  Message_Message_fromUserIdToUser Message[]    @relation("Message_fromUserIdToUser")
-  Message_Message_toUserIdToUser   Message[]    @relation("Message_toUserIdToUser")
+  perguntas            Perguntas[]  @relation("Perguntas")
+  addresseeFriendships Friendship[] @relation("AddresseeFriendships")
+  requestedFriendships Friendship[] @relation("RequestedFriendships")
+
+  messagesSent     Message[] @relation("Message_fromUserIdToUser")
+  messagesReceived Message[] @relation("Message_toUserIdToUser")
 }
 
 model Match {
@@ -57,38 +58,38 @@ model Match {
 }
 
 model Message {
-  id                            String   @id @default(uuid())
-  fromUserId                    String
-  toUserId                      String
-  message                       String
-  createdAt                     DateTime @default(now())
-  replied                       Boolean  @default(false)
-  viewed                        Boolean  @default(false)
-  read                          Boolean? @default(false)
-  User_Message_fromUserIdToUser User     @relation("Message_fromUserIdToUser", fields: [fromUserId], references: [id])
-  User_Message_toUserIdToUser   User     @relation("Message_toUserIdToUser", fields: [toUserId], references: [id])
+  id         String   @id @default(uuid())
+  fromUserId String
+  toUserId   String
+  message    String
+  createdAt  DateTime @default(now())
+  replied    Boolean  @default(false)
+  viewed     Boolean  @default(false)
+  read       Boolean? @default(false)
+
+  fromUser User @relation("Message_fromUserIdToUser", fields: [fromUserId], references: [id])
+  toUser   User @relation("Message_toUserIdToUser", fields: [toUserId], references: [id])
 }
 
 model Perguntas {
-  id        String   @id @default(uuid())
-  question  String
-  options   String[]
-  correctAnswer    String
-  subject   String
-  userId    String @map("userId")
-  user      User     @relation("Perguntas", fields: [userId], references: [id])
+  id            String   @id @default(uuid())
+  question      String
+  options       String[]
+  correctAnswer String
+  subject       String
+  userId        String   @map("userId")
+  user          User     @relation("Perguntas", fields: [userId], references: [id])
 
   categoriaPerguntasId String
   categoriaPerguntas   CategoriaPerguntas @relation("Perguntas", fields: [categoriaPerguntasId], references: [id])
 }
 
 model CategoriaPerguntas {
-  id        String   @id @default(uuid())
-  name      String
+  id   String @id @default(uuid())
+  name String
 
   Perguntas Perguntas[] @relation("Perguntas")
 }
-
 
 enum FriendshipStatus {
   PENDING
