@@ -97,6 +97,14 @@ class ChatService {
     
     return friendsWithMessages;
   }
+
+  public async getUnreadMessageCounts(userId: string) {
+    return prisma.message.groupBy({
+      by: ['fromUserId'],
+      where: { toUserId: userId, read: false },
+      _count: { id: true },
+    });
+  }
 }
 
 export default ChatService;

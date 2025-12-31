@@ -24,11 +24,11 @@ userRouter.post(
 );
 
 // General user routes (protected)
-userRouter.get('/users', authMiddleware, userController.listAll);
-userRouter.get('/users/light', authMiddleware, userController.listLight);
-userRouter.get('/users/search', authMiddleware, userController.search);
-userRouter.get('/users/:userId', authMiddleware, userController.getPublicProfile);
-userRouter.delete('/users/me', authMiddleware, userController.deleteSelf);
+userRouter.get('/', authMiddleware, userController.listAll); // Corrected path
+userRouter.get('/light', authMiddleware, userController.listLight); // Corrected path
+userRouter.get('/search', authMiddleware, userController.search); // Corrected path
+userRouter.get('/:userId', authMiddleware, userController.getPublicProfile); // Corrected path
+userRouter.delete('/me', authMiddleware, userController.deleteSelf); // Corrected path
 
 
 export { userRouter };

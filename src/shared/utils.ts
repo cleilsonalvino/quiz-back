@@ -1,12 +1,8 @@
-/**
- * Shuffles an array in-place using the Fisher-Yates (aka Knuth) Shuffle algorithm.
- * @param array The array to shuffle.
- * @returns The same array, shuffled.
- */
-export function shuffleArray<T>(array: T[]): T[] {
-  for (let i = array.length - 1; i > 0; i--) {
+export const shuffleArray = <T>(array: T[]): T[] => {
+  const shuffledArray = [...array];
+  for (let i = shuffledArray.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
+    [shuffledArray[i], shuffledArray[j]] = [shuffledArray[j], shuffledArray[i]];
   }
-  return array;
-}
+  return shuffledArray;
+};

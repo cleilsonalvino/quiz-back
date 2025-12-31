@@ -16,5 +16,6 @@ chatRouter.use(authMiddleware);
 chatRouter.get('/messages/:userId', chatController.getHistory);
 chatRouter.post('/messages/mark-read/:friendId', chatController.markAsRead);
 chatRouter.get('/friends-with-unread', chatController.getFriendsWithUnread);
+chatRouter.get('/messages/unread-count', chatController.getUnreadCount); // New route
 
 export { chatRouter };

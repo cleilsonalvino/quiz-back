@@ -1,0 +1,145 @@
+### **Rotas da API REST (Requisições HTTP)**
+
+*   **Base URL:** Todas as rotas da API REST utilizam o prefixo `/api/v1`.
+*   **Autenticação:** Para a maioria das rotas protegidas, um token JWT deve ser enviado no cabeçalho `Authorization` no formato `Bearer <token>`.
+*   **Formato de Resposta:** As respostas geralmente serão JSON.
+
+**Endpoints Principais:**
+
+*   **Raiz & Status**
+    *   `GET /`: Mensagem de boas-vindas.
+    *   `GET /status`: Checagem de saúde da API (`{ status: 'ok' }`).
+    *   `GET /app-version`: Informações da versão do aplicativo.
+*   **Usuários (`/api/v1/users`)**
+    *   `POST /api/v1/users/register`: Registro de novo usuário.
+    *   `POST /api/v1/users/login`: Login de usuário.
+    *   `POST /api/v1/users/forgot-password/request-code`: Solicita código para redefinição de senha.
+    *   `POST /api/v1/users/forgot-password/reset-password`: Redefine a senha.
+    *   `GET /api/v1/users/profile`: Obtém o perfil do usuário autenticado.
+    *   `POST /api/v1/users/profile/upload-image`: Upload de imagem de perfil (espera `multipart/form-data`).
+    *   `GET /api/v1/users`: Lista todos os usuários (requer autenticação).
+    *   `GET /api/v1/users/light`: Lista usuários com status online/offline (requer autenticação).
+    *   `GET /api/v1/users/search`: Busca usuários por nome (requer autenticação).
+    *   `GET /api/v1/users/:userId`: Obtém o perfil público de um usuário específico (requer autenticação).
+    *   `DELETE /api/v1/users/me`: Exclui a própria conta do usuário autenticado.
+*   **Amizades (`/api/v1/friends`)**
+    *   `POST /api/v1/friends/request`: Envia pedido de amizade.
+    *   `POST /api/v1/friends/accept`: Aceita pedido de amizade.
+    *   `POST /api/v1/friends/decline`: Recusa pedido de amizade.
+    *   `GET /api/v1/friends/requests`: Lista pedidos de amizade pendentes.
+    *   `GET /api/v1/friends/accepted`: Lista amigos aceitos.
+    *   `DELETE /api/v1/friends/delete/:friendId`: Remove um amigo.
+*   **Chat (`/api/v1/messages` e `/api/v1/friends`)**
+    *   `GET /api/v1/messages/:userId`: Obtém histórico de conversa com um usuário específico.
+    *   `POST /api/v1/messages/mark-read/:friendId`: Marca mensagens de um amigo como lidas.
+    *   `GET /api/v1/messages/unread-count`: Obtém contagem de mensagens não lidas agrupadas por remetente.
+    *   `GET /api/v1/friends-with-unread`: Lista de amigos com a última mensagem e contagens de não lidas.
+*   **Ranking (`/api/v1/ranking`)**
+    *   `GET /api/v1/ranking`: Obtém os melhores jogadores para o ranking.
+*   **Histórico de Partidas (`/api/v1/matches`)**
+    *   `GET /api/v1/matches/user/:userId/history`: Obtém o histórico de partidas de um usuário específico.
+
+---
+
+### **Eventos Socket.IO**
+
+*   **Conexão:** O frontend deve conectar ao servidor Socket.IO. Para autenticação, o token JWT deve ser passado no objeto `auth` durante a conexão:
+    ```javascript
+    const socket = io('http://localhost:3005', {
+      auth: {
+        token: 'YOUR_JWT_TOKEN_HERE'
+      }
+    });
+    ```
+*   **Estrutura de Dados `Player` / `GameConfig`:**
+    *   `Player`: `{ id: string, username: string, socketId: string, score: number, hasAnswered: boolean, isBot: boolean, isReady: boolean }`
+    *   `GameConfig`: `{ category: string, numQuestions: number, quizTime: number }`
+    *   `Question`: `{ question: string, alternativas: string[], correctAnswer: string }`
+
+---
+
+#### **Eventos Emitidos pelo Frontend (Recebidos pelo Backend):**
+
+*   **Matchmaking Público**
+    *   `matchmaking:createPublicMatch`: Inicia uma busca por partida pública ou cria uma nova.
+        *   Dados: `{ category: string, numQuestions: number, quizTime: number }`
+    *   `matchmaking:joinPendingGame`: Entra em uma partida pública específica que está aguardando jogadores.
+        *   Dados: `{ gameId: string }`
+    *   `matchmaking:cancel`: Cancela a entrada na fila de matchmaking.
+        *   Dados: `{ gameId: string }` (ID do jogo pendente que está sendo cancelado)
+*   **Desafios Privados**
+    *   `challenge:create`: Cria um desafio para outro usuário.
+        *   Dados: `{ opponentId: string, category: string, numQuestions: number, quizTime: number }`
+    *   `challenge:accept`: Aceita um desafio recebido.
+        *   Dados: `{ gameId: string }`
+    *   `challenge:decline`: Recusa um desafio recebido.
+        *   Dados: `{ gameId: string }`
+    *   `challenge:cancel`: Cancela um desafio que foi enviado (pelo desafiador).
+        *   Dados: `{ gameId: string }`
+*   **Lógica do Jogo**
+    *   `playerReadyForGame`: Informa ao backend que o jogador está pronto após o carregamento da partida.
+        *   Dados: `{ gameId: string }`
+    *   `game:submitAnswer`: Envia a resposta de um jogador para a pergunta atual.
+        *   Dados: `{ gameId: string, questionIndex: number, selectedOption: string }`
+    *   `game:surrender`: O jogador se rende na partida.
+        *   Dados: `{ gameId: string }`
+*   **Salas Personalizadas**
+    *   `customRoom:create`: Cria uma nova sala personalizada.
+        *   Dados: `{ category: string, numQuestions: number, quizTime: number }`
+    *   `customRoom:join`: Entra em uma sala personalizada com um código específico.
+        *   Dados: `{ roomCode: string }`
+    *   `customRoom:leave`: Sai de uma sala personalizada.
+        *   Dados: `{ roomCode: string }`
+    *   `customRoom:toggleReady`: Altera o status de "pronto" do jogador na sala personalizada.
+        *   Dados: `{ roomCode: string }`
+    *   `customRoom:start`: (Apenas o host) Inicia o jogo na sala personalizada.
+        *   Dados: `{ roomCode: string }`
+
+---
+
+#### **Eventos Emitidos pelo Backend (Recebidos pelo Frontend):**
+
+*   **Geral**
+    *   `error`: Evento genérico de erro.
+        *   Dados: `{ message: string, details?: any }`
+    *   `user:disconnected_by_new_login`: Emitido para um socket antigo quando o mesmo usuário se conecta de outro dispositivo.
+*   **Matchmaking Público**
+    *   `matchmaking:pending_list`: Lista atualizada de partidas públicas esperando jogadores.
+        *   Dados: `Array<{ gameId: string, category: string, player1Username: string, numQuestions: number, quizTime: number }>`
+    *   `gameCreated`: Confirmação de que uma partida foi criada com sucesso (aguardando oponente).
+        *   Dados: `{ gameId: string, message: string }`
+    *   `matchmaking:error`: Erro durante o processo de matchmaking.
+        *   Dados: `{ message: string }`
+    *   `matchmaking:canceled`: Confirmação de que o matchmaking foi cancelado.
+*   **Desafios Privados**
+    *   `challenge:received`: Um desafio foi recebido de outro usuário.
+        *   Dados: `{ challengerId: string, challengerName: string, gameId: string, category: string, numQuestions: number, quizTime: number }`
+    *   `challenge:created`: Confirmação de que o desafio foi enviado e está aguardando resposta.
+        *   Dados: `{ gameId: string, message: string }`
+    *   `challenge:response`: Resposta a um desafio (`accepted`, `declined`, `expired`).
+        *   Dados: `{ type: 'accepted' | 'declined' | 'expired' | 'error', gameId: string, message?: string }`
+    *   `challenge:canceled`: O desafio foi cancelado pelo outro jogador ou expirou.
+        *   Dados: `{ gameId: string, message?: string }`
+*   **Lógica do Jogo**
+    *   `gameStarted`: A partida foi pareada e está pronta para começar (o frontend deve carregar os assets).
+        *   Dados: `{ gameId: string, config: GameConfig, players: Player[] }`
+    *   `nextQuestion`: Uma nova pergunta foi enviada.
+        *   Dados: `{ question: Question, questionIndex: number, totalQuestions: number }`
+    *   `timerUpdate`: Atualização do tempo restante para a pergunta atual.
+        *   Dados: `timeLeft: number`
+    *   `scoreUpdate`: Pontuações dos jogadores foram atualizadas.
+        *   Dados: `{ scores: Array<{ userId: string, score: number }> }`
+    *   `gameOver`: A partida terminou.
+        *   Dados: `{ gameId: string, finalScores: Array<{ userId: string, score: number }>, winnerId: string | null, reason: string }`
+    *   `player:disconnected`: Um oponente se desconectou temporariamente.
+        *   Dados: `{ userId: string, username: string }`
+    *   `player:reconnected`: Um oponente se reconectou à partida.
+        *   Dados: `{ userId: string, username: string }`
+*   **Chat**
+    *   `chat:new_message`: Uma nova mensagem de chat foi recebida.
+        *   Dados: `Message` (objeto completo da mensagem).
+*   **Salas Personalizadas**
+    *   `customRoom:update`: O estado da sala personalizada foi atualizado (ex: jogador entrou/saiu, status de pronto mudou).
+        *   Dados: `CustomRoom` (objeto completo da sala).
+    *   `customRoom:error`: Erro na operação da sala personalizada.
+        *   Dados: `{ message: string }`

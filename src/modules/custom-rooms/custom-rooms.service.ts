@@ -75,14 +75,12 @@ class CustomRoomsService {
       return;
     }
     
-    // For simplicity, limit to 2 players for now
     if (room.players.length >= 2) {
       socket.emit('customRoom:error', { message: 'A sala está cheia.' });
       return;
     }
 
     if (room.players.some(p => p.id === userId)) {
-      // Player is already in the room, just update socket id and join
       room.players.find(p => p.id === userId)!.socketId = socket.id;
     } else {
       const newPlayer: CustomRoomPlayer = {
@@ -115,13 +113,24 @@ class CustomRoomsService {
         this.customRooms.delete(roomCode);
         console.log(`[CustomRooms] Room ${roomCode} is empty and has been deleted.`);
       } else {
-        // If the host left, assign a new host
         if (room.hostId === userId) {
           room.hostId = room.players[0].id;
           room.players[0].isHost = true;
         }
         this.emitRoomUpdate(roomCode);
       }
+    }
+  }
+
+  public toggleReady(socket: AuthenticatedSocket, roomCode: string) {
+    const userId = socket.user?.userId;
+    const room = this.customRooms.get(roomCode);
+    if (!room || !userId) return;
+
+    const player = room.players.find(p => p.id === userId);
+    if (player) {
+      player.isReady = !player.isReady;
+      this.emitRoomUpdate(roomCode);
     }
   }
   
@@ -139,13 +148,17 @@ class CustomRoomsService {
        return;
     }
     
-    // Start game
-    const player1 = room.players[0];
-    const player2 = room.players[1];
+    const allReady = room.players.every(p => p.isReady);
+    if (!allReady) {
+      socket.emit('customRoom:error', { message: 'Todos os jogadores precisam estar prontos.' });
+      return;
+    }
+    
+    const player1: Player = { ...room.players[0], isReady: false }; // Reset for GameService readiness
+    const player2: Player = { ...room.players[1], isReady: false }; // Reset for GameService readiness
     
     this.gameService.createGame(player1, player2, room.config);
     
-    // Cleanup room
     this.customRooms.delete(roomCode);
   }
 }

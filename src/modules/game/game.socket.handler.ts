@@ -1,6 +1,6 @@
 import { Socket } from 'socket.io';
 import GameService from './game.service';
-import { submitAnswerSchema, surrenderGameSchema } from './game.dto';
+import { submitAnswerSchema, surrenderGameSchema, playerReadySchema } from './game.dto';
 
 interface AuthenticatedSocket extends Socket {
   user?: {
@@ -17,10 +17,7 @@ class GameSocketHandler {
       try {
         const validatedData = submitAnswerSchema.parse(data);
         const userId = socket.user?.userId;
-        if (!userId) {
-          socket.emit('error', { message: 'Authentication error.' });
-          return;
-        }
+        if (!userId) return;
         this.gameService.submitAnswer(validatedData.gameId, userId, validatedData.selectedOption);
       } catch (error) {
         socket.emit('error', { message: 'Invalid data for submitAnswer.', details: error });
@@ -31,14 +28,27 @@ class GameSocketHandler {
       try {
         const validatedData = surrenderGameSchema.parse(data);
         const userId = socket.user?.userId;
-        if (!userId) {
-          socket.emit('error', { message: 'Authentication error.' });
-          return;
-        }
+        if (!userId) return;
         this.gameService.surrenderGame(validatedData.gameId, userId);
       } catch (error) {
         socket.emit('error', { message: 'Invalid data for surrender.', details: error });
       }
+    });
+
+    socket.on('playerReadyForGame', (data) => {
+      try {
+        const validatedData = playerReadySchema.parse(data);
+        const userId = socket.user?.userId;
+        if (!userId) return;
+        this.gameService.playerReady(validatedData.gameId, userId);
+      } catch (error) {
+        socket.emit('error', { message: 'Invalid data for playerReady.', details: error });
+      }
+    });
+
+    socket.on('disconnect', () => {
+      // This is needed to handle in-game disconnects specifically
+      this.gameService.handlePlayerDisconnect(socket);
     });
   }
 }

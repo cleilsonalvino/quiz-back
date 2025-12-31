@@ -1,6 +1,14 @@
 import { Socket } from 'socket.io';
 import MatchmakingService from './matchmaking.service';
-import { findMatchSchema, cancelMatchmakingSchema } from './matchmaking.dto';
+import { 
+  findMatchSchema, 
+  cancelMatchmakingSchema,
+  joinPendingGameSchema,
+  challengeSchema,
+  acceptChallengeSchema,
+  declineChallengeSchema,
+  cancelChallengeSchema,
+} from './matchmaking.dto';
 
 interface AuthenticatedSocket extends Socket {
   user?: {
@@ -13,15 +21,23 @@ class MatchmakingSocketHandler {
   constructor(private matchmakingService: MatchmakingService) {}
 
   public handleConnection(socket: AuthenticatedSocket): void {
-    // This is called right after authentication
     this.matchmakingService.handleNewConnection(socket);
 
-    socket.on('matchmaking:find', (data) => {
+    socket.on('matchmaking:createPublicMatch', (data) => {
       try {
         const validatedData = findMatchSchema.parse(data);
-        this.matchmakingService.findPublicMatch(socket, validatedData);
+        this.matchmakingService.createPublicMatch(socket, validatedData);
       } catch (error) {
-        socket.emit('error', { message: 'Invalid data for findMatch.', details: error });
+        socket.emit('error', { message: 'Invalid data for createPublicMatch.', details: error });
+      }
+    });
+
+    socket.on('matchmaking:joinPendingGame', (data) => {
+      try {
+        const validatedData = joinPendingGameSchema.parse(data);
+        this.matchmakingService.joinPendingGame(socket, validatedData.gameId);
+      } catch (error) {
+        socket.emit('error', { message: 'Invalid data for joinPendingGame.', details: error });
       }
     });
 
@@ -34,7 +50,45 @@ class MatchmakingSocketHandler {
       }
     });
 
-    socket.on('disconnect', (reason) => {
+    // --- Challenges ---
+    socket.on('challenge:create', (data) => {
+      try {
+        const validatedData = challengeSchema.parse(data);
+        this.matchmakingService.createChallenge(socket, validatedData);
+      } catch (error) {
+        socket.emit('error', { message: 'Invalid data for challenge:create.', details: error });
+      }
+    });
+
+    socket.on('challenge:accept', (data) => {
+      try {
+        const validatedData = acceptChallengeSchema.parse(data);
+        this.matchmakingService.acceptChallenge(socket, validatedData.gameId);
+      } catch (error) {
+        socket.emit('error', { message: 'Invalid data for challenge:accept.', details: error });
+      }
+    });
+
+    socket.on('challenge:decline', (data) => {
+      try {
+        const validatedData = declineChallengeSchema.parse(data);
+        this.matchmakingService.declineChallenge(socket, validatedData.gameId);
+      } catch (error) {
+        socket.emit('error', { message: 'Invalid data for challenge:decline.', details: error });
+      }
+    });
+
+    socket.on('challenge:cancel', (data) => {
+      try {
+        const validatedData = cancelChallengeSchema.parse(data);
+        this.matchmakingService.cancelChallenge(socket, validatedData.gameId);
+      } catch (error) {
+        socket.emit('error', { message: 'Invalid data for challenge:cancel.', details: error });
+      }
+    });
+
+
+    socket.on('disconnect', () => {
       this.matchmakingService.handleDisconnect(socket);
     });
   }

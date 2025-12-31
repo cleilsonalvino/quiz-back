@@ -1,6 +1,6 @@
 import { Socket } from 'socket.io';
 import CustomRoomsService from './custom-rooms.service';
-import { createRoomSchema, joinRoomSchema, leaveRoomSchema, startGameSchema } from './custom-rooms.dto';
+import { createRoomSchema, joinRoomSchema, leaveRoomSchema, startGameSchema, toggleReadySchema } from './custom-rooms.dto';
 
 interface AuthenticatedSocket extends Socket {
   user?: { userId: string; username: string; };
@@ -37,6 +37,15 @@ class CustomRoomsSocketHandler {
         }
     });
 
+    socket.on('customRoom:toggleReady', (data) => {
+      try {
+        const validatedData = toggleReadySchema.parse(data);
+        this.customRoomsService.toggleReady(socket, validatedData.roomCode);
+      } catch (error) {
+        socket.emit('error', { message: 'Invalid data for toggling ready.', details: error });
+      }
+    });
+
     socket.on('customRoom:start', (data) => {
       try {
         const validatedData = startGameSchema.parse(data);
@@ -45,10 +54,6 @@ class CustomRoomsSocketHandler {
         socket.emit('error', { message: 'Invalid data for starting game.', details: error });
       }
     });
-    
-    // We could add a generic "leave all rooms on disconnect" logic here,
-    // but the matchmaking disconnect handler is already complex.
-    // For now, leaving this part out to avoid conflicts. The user can explicitly leave.
   }
 }
 

@@ -47,6 +47,18 @@ class ChatController {
       next(error);
     }
   };
+
+  public getUnreadCount = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<Response | void> => {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) throw new AppError('Usuário não autenticado.', 401);
+
+      const unreadCounts = await this.chatService.getUnreadMessageCounts(userId);
+      return res.json(unreadCounts);
+    } catch (error) {
+      next(error);
+    }
+  };
 }
 
 export default ChatController;

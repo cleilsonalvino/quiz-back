@@ -1,15 +1,22 @@
 import { Server, Socket } from 'socket.io';
 import { v4 as uuidv4 } from 'uuid';
 import { PrismaClient } from '@prisma/client';
-import { AppError } from '../../shared/errors';
 import { Game, Player, GameConfig } from './game.types';
 import { getQuestionsByCategory } from './data';
-import { shuffleArray } from '../../shared/utils'; // I will create this file
+import { shuffleArray } from '../../shared/utils';
 
 const prisma = new PrismaClient();
 
+interface AuthenticatedSocket extends Socket {
+  user?: {
+    userId: string;
+    username: string;
+  };
+}
+
 class GameService {
   private activeGames = new Map<string, Game>();
+  private disconnectTimers = new Map<string, NodeJS.Timeout>(); // gameId -> Timeout
   private io: Server;
 
   constructor(io: Server) {
@@ -17,10 +24,23 @@ class GameService {
     console.log('[GameService] Initialized');
   }
 
+  public isUserInActiveGame(userId: string): boolean {
+    for (const game of this.activeGames.values()) {
+      if (!game.isFinished && game.players.some(p => p.id === userId)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   public createGame(player1: Player, player2: Player, config: GameConfig): Game {
     const gameId = uuidv4();
     const questions = getQuestionsByCategory(config.category);
     const shuffledQuestions = shuffleArray(questions).slice(0, config.numQuestions);
+
+    // Set readiness to false for real players, true for bots
+    player1.isReady = player1.isBot;
+    player2.isReady = player2.isBot;
 
     const game: Game = {
       id: gameId,
@@ -33,16 +53,34 @@ class GameService {
     };
 
     this.activeGames.set(gameId, game);
-    
+
     // Both players join the socket room
     this.io.sockets.sockets.get(player1.socketId)?.join(gameId);
     this.io.sockets.sockets.get(player2.socketId)?.join(gameId);
 
-    console.log(`[GameService] Game ${gameId} created for ${player1.username} and ${player2.username}.`);
+    console.log(`[GameService] Game ${gameId} created for ${player1.username} and ${player2.username}. Waiting for players to be ready.`);
     this.io.to(gameId).emit('gameStarted', { gameId: game.id, config: game.config, players: game.players });
-    
-    this.startGame(gameId);
+
+    // DO NOT start the game immediately. Wait for playerReady event.
     return game;
+  }
+
+  public playerReady(gameId: string, userId: string) {
+    const game = this.activeGames.get(gameId);
+    if (!game) return;
+
+    const player = game.players.find(p => p.id === userId);
+    if (!player) return;
+
+    player.isReady = true;
+    console.log(`[GameService] Player ${player.username} is ready for game ${gameId}.`);
+
+    const allPlayersReady = game.players.every(p => p.isReady);
+
+    if (allPlayersReady) {
+      console.log(`[GameService] All players are ready. Starting game ${gameId}.`);
+      this.startGame(gameId);
+    }
   }
 
   public createBotGame(player1: Player, config: GameConfig): Game {
@@ -53,9 +91,9 @@ class GameService {
       score: 0,
       hasAnswered: false,
       isBot: true,
-      isReady: true,
+      isReady: true, // Bots are always ready
     };
-    
+
     return this.createGame(player1, botPlayer, config);
   }
 
@@ -88,7 +126,6 @@ class GameService {
     const questionIndex = game.currentQuestionIndex;
     const question = game.questions[questionIndex];
 
-    // Reset answer status for players
     game.players.forEach(p => p.hasAnswered = false);
 
     this.io.to(gameId).emit('nextQuestion', {
@@ -97,12 +134,11 @@ class GameService {
       totalQuestions: game.questions.length,
     });
 
-    // If one of the players is a bot, make it respond
     const bot = game.players.find(p => p.isBot);
     if (bot) {
       this.botRespond(game);
     }
-    
+
     let timeLeft = game.config.quizTime;
     this.io.to(gameId).emit('timerUpdate', timeLeft);
 
@@ -156,8 +192,11 @@ class GameService {
     console.log(`[GameService] Ending game ${gameId}. Reason: ${reason}`);
     game.isFinished = true;
     if (game.questionTimer) clearInterval(game.questionTimer);
+    if (this.disconnectTimers.has(gameId)) {
+        clearTimeout(this.disconnectTimers.get(gameId));
+        this.disconnectTimers.delete(gameId);
+    }
 
-    // Persist scores and match data
     try {
       for (const player of game.players) {
         if (!player.isBot) {
@@ -215,15 +254,76 @@ class GameService {
       answer = wrongOptions[Math.floor(Math.random() * wrongOptions.length)];
     }
 
-    const responseTime = 2000 + Math.random() * 3000; // 2-5 seconds
+    const responseTime = 2000 + Math.random() * 3000;
 
     setTimeout(() => {
-      // Check if game still exists and bot hasn't answered yet
       const currentGame = this.activeGames.get(game.id);
       if (currentGame && !bot.hasAnswered) {
         this.submitAnswer(game.id, bot.id, answer);
       }
     }, responseTime);
+  }
+
+  public handlePlayerDisconnect(socket: AuthenticatedSocket) {
+    const userId = socket.user?.userId;
+    if (!userId) return;
+
+    let gameId: string | undefined;
+    let disconnectedPlayer: Player | undefined;
+
+    for (const [id, game] of this.activeGames.entries()) {
+        const player = game.players.find(p => p.id === userId);
+        if (player && !game.isFinished) {
+            gameId = id;
+            disconnectedPlayer = player;
+            break;
+        }
+    }
+
+    if (!gameId || !disconnectedPlayer) return;
+
+    const game = this.activeGames.get(gameId);
+    if (!game) return;
+
+    // Notify other players
+    this.io.to(gameId).emit('player:disconnected', { userId, username: disconnectedPlayer.username });
+    console.log(`[GameService] Player ${disconnectedPlayer.username} disconnected from game ${gameId}. Starting grace period.`);
+
+    const timer = setTimeout(() => {
+        console.log(`[GameService] Grace period ended for player ${userId} in game ${gameId}. Ending game.`);
+        this.endGame(gameId, `disconnect_${userId}`);
+        this.disconnectTimers.delete(gameId);
+    }, 15000); // 15 seconds grace period
+
+    this.disconnectTimers.set(gameId, timer);
+  }
+
+  public handlePlayerReconnect(userId: string, newSocketId: string) {
+    let gameId: string | undefined;
+
+    for (const [id, game] of this.activeGames.entries()) {
+        if (game.players.some(p => p.id === userId) && !game.isFinished) {
+            gameId = id;
+            break;
+        }
+    }
+
+    if (!gameId) return;
+
+    const game = this.activeGames.get(gameId);
+    const player = game?.players.find(p => p.id === userId);
+
+    if (game && player && this.disconnectTimers.has(gameId)) {
+        console.log(`[GameService] Player ${player.username} reconnected to game ${gameId}.`);
+        clearTimeout(this.disconnectTimers.get(gameId));
+        this.disconnectTimers.delete(gameId);
+
+        player.socketId = newSocketId;
+        const socket = this.io.sockets.sockets.get(newSocketId);
+        socket?.join(gameId);
+
+        this.io.to(gameId).emit('player:reconnected', { userId, username: player.username });
+    }
   }
 }
 
