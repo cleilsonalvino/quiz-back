@@ -5,10 +5,10 @@ const admin = require("firebase-admin");
 const { getMessaging } = require('firebase-admin/messaging');
 
 // Garanta que a inicialização acontece antes de qualquer rota ser definida
-const serviceAccount = require("./firebase-service-account.json"); 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-});
+// const serviceAccount = require("./firebase-service-account.json"); 
+// admin.initializeApp({
+//   credential: admin.credential.cert(serviceAccount),
+// });
 
 
 console.log("Firebase Admin SDK inicializado com sucesso.");
