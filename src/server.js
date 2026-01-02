@@ -302,7 +302,7 @@ app.post("/login", async (req, res) => {
   where: {
     OR: [
       { email: email },
-      { username: username }
+      { username: email }
     ]
   }
 });
