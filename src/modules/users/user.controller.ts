@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import userService from './user.service';
+import userService from './user.service.ts';
 import { RegisterUserDTO, LoginUserDTO, ForgotPasswordRequestDTO, ResetPasswordDTO } from './user.dto';
 import { AppError } from '../../shared/errors';
 
@@ -25,6 +25,7 @@ class UserController {
   public async login(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
       const loginData: LoginUserDTO = req.body;
+      console.log(loginData)
       const result = await userService.login(loginData);
       return res.json(result);
     } catch (error) {
