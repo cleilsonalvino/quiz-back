@@ -11,6 +11,7 @@ const { portuguesConcursos } = require('./data/portuguesConcursos');
 const {matematicaConcursos} = require('./data/matematicaConcursos');
 const { logicaProgramacao } = require('./data/logicaQuestions');
 const { bancoDeDadosQuestions } = require('./data/bancoDeDadosQuestions');
+const { questionsST } = require('./data/strangersThingsQuestions');
 
 const activeGames = new Map(); // Esta é a instância única de activeGames
 let ioInstance; // Armazena a instância do Socket.IO server
@@ -35,6 +36,7 @@ const getQuestionsByCategory = (categoryName) => {
         case 'Matematica': return matematicaConcursos;
         case 'Logica': return logicaProgramacao;
         case 'Banco de Dados': return bancoDeDadosQuestions;
+        case 'Stranger Things': return questionsST;
         default: return htmlQuestions;
     }
 };

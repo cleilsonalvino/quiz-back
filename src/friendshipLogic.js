@@ -29,77 +29,55 @@ const setupFriendshipLogic = (io, prisma, onlineUsers) => {
      * @returns {Promise<object>} A solicitação de amizade criada.
      */
     const sendFriendRequest = async (requesterId, addresseeId) => {
-        if (requesterId === addresseeId) {
-            throw new Error("Você não pode enviar uma solicitação de amizade para si mesmo.");
-        }
+  if (requesterId === addresseeId) {
+    throw new Error("Você não pode enviar uma solicitação de amizade para si mesmo.");
+  }
 
-        const existingFriendship = await prisma.friendship.findFirst({
-            where: {
-                OR: [
-                    { requesterId: requesterId, addresseeId: addresseeId, status: FriendshipStatus.ACCEPTED },
-                    { requesterId: addresseeId, addresseeId: requesterId, status: FriendshipStatus.ACCEPTED },
-                ],
-            },
-        });
+  // 🔒 Normaliza os IDs (evita amizade invertida)
+  const [u1, u2] = [requesterId, addresseeId].sort();
 
-        if (existingFriendship) {
-            throw new Error("Vocês já são amigos.");
-        }
+  // ✅ Verifica se já são amigos
+  const alreadyFriends = await prisma.friendship.findFirst({
+    where: {
+      requesterId: u1,
+      addresseeId: u2,
+      status: FriendshipStatus.ACCEPTED,
+    },
+  });
 
-        const existingPendingRequest = await prisma.friendship.findUnique({
-            where: {
-                requesterId_addresseeId: {
-                    requesterId: requesterId,
-                    addresseeId: addresseeId,
-                },
-                status: FriendshipStatus.PENDING,
-            },
-        });
+  if (alreadyFriends) {
+    throw new Error("Vocês já são amigos.");
+  }
 
-        if (existingPendingRequest) {
-            throw new Error("Você já enviou uma solicitação para este usuário. Aguardando resposta.");
-        }
+  // ✅ Verifica se já existe solicitação pendente
+  const pendingRequest = await prisma.friendship.findFirst({
+    where: {
+      requesterId: u1,
+      addresseeId: u2,
+      status: FriendshipStatus.PENDING,
+    },
+  });
 
-        const inversePendingRequest = await prisma.friendship.findUnique({
-            where: {
-                requesterId_addresseeId: {
-                    requesterId: addresseeId,
-                    addresseeId: requesterId,
-                },
-                status: FriendshipStatus.PENDING,
-            },
-        });
+  if (pendingRequest) {
+    throw new Error("Já existe uma solicitação pendente.");
+  }
 
-        if (inversePendingRequest) {
-            console.log(`[FriendshipLogic] Solicitação inversa encontrada. Aceitando automaticamente para ${requesterId} e ${addresseeId}.`);
-            return acceptFriendRequest(requesterId, addresseeId); // requesterId é o addressee da solicitação inversa
-        }
+  // ✅ Cria solicitação
+  const friendRequest = await prisma.friendship.create({
+    data: {
+      requesterId: u1,
+      addresseeId: u2,
+      status: FriendshipStatus.PENDING,
+    },
+    include: {
+      requester: { select: { id: true, username: true } },
+      addressee: { select: { id: true, username: true } },
+    },
+  });
 
-        const friendRequest = await prisma.friendship.create({
-            data: {
-                requesterId: requesterId,
-                addresseeId: addresseeId,
-                status: FriendshipStatus.PENDING,
-            },
-            include: {
-                requester: { select: { id: true, username: true } },
-                addressee: { select: { id: true, username: true } },
-            },
-        });
+  return friendRequest;
+};
 
-        const addresseeSocketData = onlineUsers.get(addresseeId);
-        if (addresseeSocketData && addresseeSocketData.socketId) {
-            io.to(addresseeSocketData.socketId).emit("friendship:request_received", {
-                friendshipId: friendRequest.id,
-                requesterId: requesterId,
-                requesterUsername: friendRequest.requester.username,
-                message: `${friendRequest.requester.username} enviou uma solicitação de amizade!`,
-            });
-            console.log(`[FriendshipLogic] Notificação de amizade enviada para ${addresseeSocketData.username}.`);
-        }
-
-        return friendRequest;
-    };
 
     /**
      * Aceita uma solicitação de amizade.
