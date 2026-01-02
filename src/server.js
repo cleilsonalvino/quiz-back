@@ -341,11 +341,10 @@ app.post("/login", async (req, res) => {
 app.get("/profile", authenticateToken, async (req, res) => {
   const userId = req.user.userId;
 
-  console.log(
-    `Backend: Buscando perfil e estatísticas para o usuário autenticado: ${userId}`
-  );
+  console.log(`Backend: Buscando perfil completo para o usuário: ${userId}`);
 
   try {
+    // 1. Busca os dados básicos do usuário
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -359,61 +358,39 @@ app.get("/profile", authenticateToken, async (req, res) => {
     });
 
     if (!user) {
-      return res
-        .status(404)
-        .json({ message: "Perfil do usuário não encontrado." });
+      return res.status(404).json({ message: "Perfil do usuário não encontrado." });
     }
 
-    const quizzesPlayed = await prisma.match.count({
-      where: {
-        OR: [{ player1Id: userId }, { player2Id: userId }],
-      },
-    });
-
-    const wins = await prisma.match.count({
-      where: {
-        OR: [
-          {
-            player1Id: userId,
-            player1Score: { gt: prisma.match.fields.player2Score },
-          },
-          {
-            player2Id: userId,
-            player2Score: { gt: prisma.match.fields.player1Score },
-          },
-        ],
-      },
-    });
-
-    const losses = await prisma.match.count({
-      where: {
-        OR: [
-          {
-            player1Id: userId,
-            player1Score: { lt: prisma.match.fields.player2Score },
-          },
-          {
-            player2Id: userId,
-            player2Score: { lt: prisma.match.fields.player1Score },
-          },
-        ],
-      },
-    });
-
+    // 2. Busca TODAS as partidas do usuário de uma vez só
+    // Isso evita o erro de comparação de campos do Prisma e reduz o uso do banco
     const userMatches = await prisma.match.findMany({
       where: {
         OR: [{ player1Id: userId }, { player2Id: userId }],
       },
-      select: {
-        category: true,
-      },
     });
 
-    const categoryCounts = userMatches.reduce((acc, match) => {
-      acc[match.category] = (acc[match.category] || 0) + 1;
-      return acc;
-    }, {});
+    // 3. Processa as estatísticas em um único loop no JavaScript
+    let wins = 0;
+    let losses = 0;
+    const categoryCounts = {};
 
+    userMatches.forEach((match) => {
+      // Lógica de Vitórias e Derrotas
+      if (match.player1Id === userId) {
+        if (match.player1Score > match.player2Score) wins++;
+        else if (match.player1Score < match.player2Score) losses++;
+      } else {
+        if (match.player2Score > match.player1Score) wins++;
+        else if (match.player2Score < match.player1Score) losses++;
+      }
+
+      // Contagem de categorias para o favorito
+      if (match.category) {
+        categoryCounts[match.category] = (categoryCounts[match.category] || 0) + 1;
+      }
+    });
+
+    // 4. Determina a categoria favorita
     let favoriteCategory = null;
     let maxCount = 0;
     for (const category in categoryCounts) {
@@ -423,26 +400,21 @@ app.get("/profile", authenticateToken, async (req, res) => {
       }
     }
 
+    // 5. Monta o objeto de resposta
     const profileData = {
       ...user,
-      quizzesPlayed: quizzesPlayed,
+      quizzesPlayed: userMatches.length,
       wins: wins,
       losses: losses,
       favoriteCategory: favoriteCategory,
     };
 
-    console.log(
-      `Backend: Perfil e estatísticas retornados para ${user.username}`
-    );
+    console.log(`Backend: Perfil de ${user.username} processado com sucesso.`);
     res.json(profileData);
+
   } catch (error) {
-    console.error(
-      `Backend: Erro ao buscar perfil para o usuário ${userId}:`,
-      error
-    );
-    res
-      .status(500)
-      .json({ message: "Erro interno do servidor ao buscar perfil." });
+    console.error(`Backend: Erro ao buscar perfil para o usuário ${userId}:`, error);
+    res.status(500).json({ message: "Erro interno do servidor ao buscar perfil." });
   }
 });
 
