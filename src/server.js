@@ -298,7 +298,14 @@ app.post("/login", async (req, res) => {
   }
 
   try {
-    const user = await prisma.user.findUnique({ where: { email, username: email } });
+  const user = await prisma.user.findFirst({
+  where: {
+    OR: [
+      { email: email },
+      { username: username }
+    ]
+  }
+});
 
     if (!user) {
       return res.status(404).json({ message: "Usuário não encontrado." });
