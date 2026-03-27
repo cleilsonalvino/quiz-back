@@ -1,9 +1,7 @@
-// botGame.js
-const { v4: uuidv4 } = require("uuid"); // Garanta que uuidv4 está disponível aqui também
+const { v4: uuidv4 } = require("uuid");
 
 function criarBotHandler(gameLogicFunctions, io) {
   return function adicionarBotNaPartida(game, categoryQueue) {
-    // Se o player2 já existe (um humano entrou antes do timeout), não faça nada.
     if (game.player2) {
       console.log(`[BOT_HANDLER] Partida ${game.id} já tem player2. Bot não adicionado.`);
       return;
@@ -12,60 +10,92 @@ function criarBotHandler(gameLogicFunctions, io) {
     console.log(`[BOT_HANDLER] Adicionando bot à partida ${game.id}...`);
 
     const botPlayer = {
-      id: "bot-" + uuidv4(), // ID único para o bot
-      username: "QuizBot 🤖", // Nome do bot
-      socketId: null, // Bots não têm socketId real
+      id: "bot-" + uuidv4(),
+      username: "QuizBot 🤖",
+      socketId: null,
       score: 0,
-      isReady: true, // Bots estão sempre prontos para jogar
+      isReady: true,
       hasAnswered: false,
-      isBot: true, // Propriedade para identificar que é um bot
+      isBot: true,
+      accuracy: 0.4 // 40% de chance de acertar
     };
 
     game.player2 = botPlayer;
 
-    // É crucial remover o jogo da fila `pendingGamesByCategory`
-    // para que ele não apareça mais na lista pública e não seja mais 'joinable' por humanos.
-    // O `categoryQueue` é o Map específico para a categoria do jogo.
     if (categoryQueue) {
       categoryQueue.delete(game.id);
       console.log(`[BOT_HANDLER] Jogo ${game.id} removido da fila de categoria.`);
-    } else {
-      console.warn(`[BOT_HANDLER] categoryQueue não fornecido ou inválido para o jogo ${game.id}. Não foi possível remover da fila.`);
     }
 
-    // Carregar as perguntas para o jogo com o bot
-    // Certifique-se de que gameLogicFunctions.getQuestionsByCategory está implementado
+    // Pega as perguntas e corta para o tamanho certo
     const questions = gameLogicFunctions.getQuestionsByCategory?.(game.config.category) || [];
     game.questions = questions.slice(0, game.config.numQuestions);
-    console.log(`[BOT_HANDLER] ${game.questions.length} perguntas carregadas para o jogo ${game.id}.`);
-
-    // Atualiza o jogo no armazenamento principal (activeGames)
+    
+    // Atualiza a partida principal
     gameLogicFunctions.addGame(game.id, game);
-    console.log(`[BOT_HANDLER] Jogo ${game.id} atualizado em activeGames com o bot.`);
 
+    // Avisa o Player 1
     const playerSocketId = game.player1?.socketId;
     if (playerSocketId) {
       io.to(playerSocketId).emit("quickMatch:opponent_found", {
         message: "Um QuizBot entrou na partida! Iniciando...",
-        opponent: { id: botPlayer.id, username: botPlayer.username, isBot: true } // Envia dados do bot para o frontend
+        opponent: { id: botPlayer.id, username: botPlayer.username, isBot: true }
       });
-io.to(playerSocketId).emit('gameStarted', {
-  gameId: game.id,
-  config: game.config,
-  player1: game.player1,
-  player2: game.player2,
-  // outros dados se precisar
-});
-
-      console.log(`[BOT_HANDLER] Evento 'quickMatch:opponent_found' emitido para o player1 (${game.player1.username}).`);
-    } else {
-      console.warn(`[BOT_HANDLER] Socket ID do Player1 não encontrado para a partida ${game.id}.`);
+      io.to(playerSocketId).emit('gameStarted', {
+        gameId: game.id,
+        config: game.config,
+        player1: game.player1,
+        player2: game.player2,
+      });
     }
 
     // Inicia o jogo!
-    console.log(`[BOT_HANDLER] Chamando gameLogicFunctions.startGame para o jogo ${game.id}.`);
     gameLogicFunctions.startGame(game.id);
   };
 }
 
-module.exports = { criarBotHandler };
+// O Bot usa esta função para "clicar" na resposta
+function simularRespostaDoBot(gameId, questionIndex, gameLogicFunctions, ioInstance) {
+  const game = gameLogicFunctions.getGame(gameId);
+  if (!game || !game.player2?.isBot || game.isFinished) return;
+
+  // Tempo de "pensamento" (2 a 5 segundos)
+  const tempoDeResposta = Math.floor(Math.random() * 3000) + 2000;
+
+  setTimeout(() => {
+    const currentGame = gameLogicFunctions.getGame(gameId);
+    if (!currentGame || currentGame.currentQuestionIndex !== questionIndex || currentGame.player2.hasAnswered) return;
+
+    const question = currentGame.questions[questionIndex];
+    
+    // O bot decide se vai acertar
+    const vaiAcertar = Math.random() < currentGame.player2.accuracy;
+    
+    let opcaoEscolhida;
+    if (vaiAcertar) {
+      opcaoEscolhida = question.correctAnswer;
+    } else {
+      const alternativasErradas = question.alternativas.filter(opt => opt !== question.correctAnswer);
+      opcaoEscolhida = alternativasErradas[Math.floor(Math.random() * alternativasErradas.length)];
+    }
+
+    // O bot envia sua escolha para a mesma função que processa a resposta do humano!
+    if (gameLogicFunctions.processSubmitAnswer) {
+      gameLogicFunctions.processSubmitAnswer(
+        {
+          gameId: gameId,
+          userId: currentGame.player2.id,
+          questionIndex: questionIndex,
+          selectedOption: opcaoEscolhida
+        },
+        ioInstance,
+        gameLogicFunctions
+      );
+    } else {
+       console.error("[BOT_HANDLER] processSubmitAnswer não encontrada em gameLogicFunctions.");
+    }
+
+  }, tempoDeResposta);
+}
+
+module.exports = { criarBotHandler, simularRespostaDoBot };

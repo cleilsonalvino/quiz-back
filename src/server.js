@@ -22,7 +22,7 @@ const cors = require("cors");
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
-const { PrismaClient } = require("@prisma/client");
+const prisma = require("../prisma/prismaClient");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken"); 
 // REMOVIDO: const admin = require("firebase-admin"); // Não mais necessário
@@ -85,8 +85,6 @@ const { initGameLogic, activeGames } = require("./gameLogic");
 const setupFriendshipLogic = require("./friendshipLogic");
 const { initializeChat } = require('./chat');
 const { matchmakingPais } = require("./pais-game/match");
-
-const prisma = new PrismaClient();
 
 const app = express();
 const server = http.createServer(app);
@@ -253,29 +251,21 @@ app.post("/register", async (req, res) => {
   }
 
   try {
-    const existingUser = await prisma.user.findFirst({
-      where: { OR: [{ email }, { username }] },
-    });
-
-    if (existingUser) {
-      return res.status(409).json({ message: "Email ou username já está em uso." });
-    }
-
-    const hashedPassword = password ? await bcrypt.hash(password, 10) : null;
-
     const newUser = await prisma.user.create({
       data: {
         email,
         username,
-        password: hashedPassword,
+        password: password ? await bcrypt.hash(password, 10) : "",
         googleId: googleId || null,
         score: 0,
       },
     });
 
-    const token = jwt.sign({ userId: newUser.id }, process.env.JWT_SECRET, {
-      expiresIn: "1y",
-    });
+    const token = jwt.sign(
+      { userId: newUser.id },
+      process.env.JWT_SECRET,
+      { expiresIn: "1y" }
+    );
 
     return res.status(201).json({
       message: "Usuário registrado com sucesso!",
@@ -284,8 +274,17 @@ app.post("/register", async (req, res) => {
       username: newUser.username,
       email: newUser.email,
     });
+
   } catch (error) {
-    res.status(500).json({ message: "Erro interno ao registrar usuário." });
+    if (error.code === 'P2002') {
+      return res.status(409).json({
+        message: "Email ou username já está em uso."
+      });
+    }
+
+    return res.status(500).json({
+      message: "Erro interno ao registrar usuário."
+    });
   }
 });
 

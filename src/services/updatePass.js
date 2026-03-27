@@ -1,11 +1,10 @@
 // src/services/updatePass.js
 
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../../prisma/prismaClient');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const fetch = require('node-fetch');
 
-const prisma = new PrismaClient();
 
 const EXTERNAL_SEND_EMAIL_API_URL = 'https://sendemails-lqua.onrender.com/send-email';
 
